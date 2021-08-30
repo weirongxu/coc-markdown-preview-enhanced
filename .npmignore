@@ -9,5 +9,5 @@ esbuild.js
 yarn.lock
 yarn-error.log
 .github
-.eslintrc.js
+.eslintrc.json
 .prettierrc
