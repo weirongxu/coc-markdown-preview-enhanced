@@ -1,6 +1,6 @@
 {
   "name": "coc-markdown-preview-enhanced",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Markdown Preview Enhanced ported to coc.nvim",
   "author": "Weirong Xu <weirongxu.raidou@gmail.com>",
   "license": "University of Illinois/NCSA",
@@ -31,6 +31,7 @@
     "semi": true
   },
   "devDependencies": {
+    "@shd101wyy/mume": "^0.6.8",
     "@types/eslint": "^7.28.0",
     "@types/eslint-plugin-prettier": "^3.1.0",
     "@types/node": "^16.7.4",
@@ -50,8 +51,7 @@
     "npm-run-all": "^4.1.5",
     "prettier": "^2.2.0",
     "rimraf": "^3.0.2",
-    "typescript": "^4.4.2",
-    "@shd101wyy/mume": "^0.6.8"
+    "typescript": "^4.4.2"
   },
   "activationEvents": [
     "onCommand:markdown-preview-enhanced.openPreview",
