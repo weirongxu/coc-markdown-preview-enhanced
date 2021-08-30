@@ -5,6 +5,8 @@
   "author": "Weirong Xu <weirongxu.raidou@gmail.com>",
   "license": "University of Illinois/NCSA",
   "main": "lib/index.js",
+  "repository": "git@github.com:weirongxu/coc-markdown-preview-enhanced.git",
+  "homepage": "https://github.com/weirongxu/coc-markdown-preview-enhanced",
   "keywords": [
     "coc.nvim",
     "markdown",
