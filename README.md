@@ -27,7 +27,7 @@
 
 **Enable the `Run code chunk` feature**
 
-> Please use this feature with caution because it may put your security at risk! Your machine can get hacked if someone makes you open a markdown with malicious code while script execution is enabled.
+> _Note: Please use this feature with caution because it may put your security at risk! Your machine can get hacked if someone makes you open a markdown with malicious code while script execution is enabled._
 
 ```json
 {
