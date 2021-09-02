@@ -47,6 +47,13 @@ More `:CocList --input=markdown-preview-enhanced. commands`
 
 https://github.com/neoclide/coc.nvim/wiki/Using-the-configuration-file
 
+## Acknowledgements
+
+The implementation of this project relies on `vscode-markdown-preview-enhanced` and `mume`.
+
+- [shd101wyy/vscode-markdown-preview-enhanced](https://github.com/shd101wyy/vscode-markdown-preview-enhanced)
+- [shd101wyy/mume](https://github.com/shd101wyy/mume)
+
 ## License
 
 [University of Illinois/NCSA Open Source License](./LICENSE.md)
