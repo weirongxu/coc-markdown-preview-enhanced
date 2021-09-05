@@ -461,11 +461,15 @@ export function activate(context: ExtensionContext) {
 async function revealLine(uri: string, line: number) {
   const doc = workspace.getDocument(uri);
   if (doc && isMarkdownFile(doc.textDocument)) {
+    const mode = await workspace.nvim.mode;
+    if (mode.mode !== 'n') {
+      return;
+    }
     const sourceLine = Math.min(Math.floor(line), doc.lineCount - 1);
     const fraction = line - sourceLine;
     const text = doc.getline(sourceLine);
     const start = Math.floor(fraction * text.length);
-    const win = await workspace.nvim.window;
+    const win = workspace.nvim.createWindow(doc.winid);
     editorScrollDelay = Date.now() + 500;
     await win.setCursor([sourceLine + 1, start]);
     editorScrollDelay = Date.now() + 500;
