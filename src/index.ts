@@ -27,14 +27,14 @@ export function activate(context: ExtensionContext) {
   // assume only one preview supported.
   const contentProvider = new MarkdownPreviewEnhancedView(context);
 
-  async function openPreview(uri?: Uri) {
+  async function openPreview(openURL: boolean, uri?: Uri) {
     const doc = await workspace.document;
     let resource = uri;
     if (!(resource instanceof Uri)) {
       // we are relaxed and don't check for markdown files
       resource = Uri.parse(doc.uri);
     }
-    await contentProvider.initPreview(resource, doc);
+    await contentProvider.initPreview(resource, doc, openURL);
   }
 
   function toggleScrollSync() {
@@ -385,7 +385,7 @@ export function activate(context: ExtensionContext) {
            */
           if (contentProvider.isPreviewOn(sourceUri)) {
             if (isUsingSinglePreview && !contentProvider.previewHasTheSameSingleSourceUri(sourceUri)) {
-              await contentProvider.initPreview(sourceUri, doc);
+              await contentProvider.initPreview(sourceUri, doc, false);
             } else if (!isUsingSinglePreview) {
               const previewPanel = contentProvider.getPreview(sourceUri);
               if (previewPanel) {
@@ -393,7 +393,7 @@ export function activate(context: ExtensionContext) {
               }
             }
           } else if (automaticallyShowPreviewOfMarkdownBeingEdited) {
-            await openPreview(sourceUri);
+            await openPreview(true, sourceUri);
           }
         }
       }),
@@ -416,7 +416,8 @@ export function activate(context: ExtensionContext) {
     commands.registerCommand(cmd, logger.asyncCatch(impl));
 
   context.subscriptions.push(
-    registerCommand('markdown-preview-enhanced.openPreview', openPreview),
+    registerCommand('markdown-preview-enhanced.openPreview', () => openPreview(true)),
+    registerCommand('markdown-preview-enhanced.openPreviewBackground', () => openPreview(false)),
     registerCommand('markdown-preview-enhanced.toggleScrollSync', toggleScrollSync),
     registerCommand('markdown-preview-enhanced.toggleLiveUpdate', toggleLiveUpdate),
     registerCommand('markdown-preview-enhanced.toggleBreakOnSingleNewLine', toggleBreakOnSingleNewLine),

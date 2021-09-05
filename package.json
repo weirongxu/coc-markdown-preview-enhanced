@@ -59,6 +59,7 @@
   },
   "activationEvents": [
     "onCommand:markdown-preview-enhanced.openPreview",
+    "onCommand:markdown-preview-enhanced.openPreviewBackground",
     "onLanguage:markdown"
   ],
   "contributes": {
@@ -420,6 +421,11 @@
       {
         "command": "markdown-preview-enhanced.openPreview",
         "title": "Markdown Preview Enhanced: Open Preview",
+        "category": "Markdown"
+      },
+      {
+        "command": "markdown-preview-enhanced.openPreviewBackground",
+        "title": "Markdown Preview Enhanced: Open Preview but not openURL",
         "category": "Markdown"
       },
       {

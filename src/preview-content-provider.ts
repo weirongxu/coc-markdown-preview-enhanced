@@ -364,7 +364,7 @@ export class MarkdownPreviewEnhancedView {
     };
   }
 
-  public async initPreview(sourceUri: Uri, doc: Document) {
+  public async initPreview(sourceUri: Uri, doc: Document, openURL: boolean) {
     const isUsingSinglePreview = useSinglePreview();
     let previewPanel: WebviewPanel;
     if (isUsingSinglePreview && this.singlePreviewPanel) {
@@ -388,7 +388,7 @@ export class MarkdownPreviewEnhancedView {
         'markdown-preview-enhanced',
         `Preview ${path.basename(sourceUri.fsPath)}`,
         {
-          openURL: true,
+          openURL,
           routeName: 'markdown-preview-enhanced',
         },
         this.getWebviewOptions(sourceUri),
@@ -561,7 +561,7 @@ export class MarkdownPreviewEnhancedView {
   public refreshPreviewPanel(sourceUri: Uri) {
     this.preview2EditorMap.forEach((doc, previewPanel) => {
       if (previewPanel && doc && isMarkdownFile(doc.textDocument) && doc.uri && doc.uri === sourceUri.fsPath) {
-        void this.initPreview(sourceUri, doc);
+        void this.initPreview(sourceUri, doc, false);
       }
     });
   }
