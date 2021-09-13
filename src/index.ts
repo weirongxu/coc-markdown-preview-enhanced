@@ -3,7 +3,7 @@ import { commands, events, ExtensionContext, Position, Range, TextEdit, Uri, win
 import path from 'path';
 import { pasteImageFile, uploadImageFile } from './image-helper';
 import { getPreviewUri, isMarkdownFile, MarkdownPreviewEnhancedView } from './preview-content-provider';
-import { logger } from './util';
+import { getWebviewAPI, logger } from './util';
 
 let editorScrollDelay = Date.now();
 
@@ -277,6 +277,7 @@ export function activate(context: ExtensionContext) {
   }
 
   async function clickTagA(_uri: Uri, href: string) {
+    const util = getWebviewAPI().util;
     href = decodeURIComponent(href);
     href = href
       .replace(/^vscode\-resource:\/\//, '')
@@ -285,14 +286,14 @@ export function activate(context: ExtensionContext) {
       .replace(/^https?:\/\/(.+?)\.vscode-webview-test.com\/vscode-resource\/file\/+/, 'file:///')
       .replace(/^https?:\/\/file(.+?)\.vscode-webview\.net\/+/, 'file:///');
     if (['.pdf', '.xls', '.xlsx', '.doc', '.ppt', '.docx', '.pptx'].indexOf(path.extname(href)) >= 0) {
-      utility.openFile(href);
+      util.openUri(href);
     } else if (href.match(/^file:\/\/\//)) {
       // openFilePath = href.slice(8) # remove protocol
       let openFilePath = utility.addFileProtocol(href.replace(/(\s*)[\#\?](.+)$/, '')); // remove #anchor and ?params...
       openFilePath = decodeURI(openFilePath);
       await openVsplit(Uri.parse(openFilePath));
     } else {
-      utility.openFile(href);
+      util.openUri(href);
     }
   }
 

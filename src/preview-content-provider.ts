@@ -1,6 +1,7 @@
 import * as mume from '@shd101wyy/mume';
 import { MarkdownEngine } from '@shd101wyy/mume';
 import { useExternalAddFileProtocolFunction } from '@shd101wyy/mume/out/src/utility';
+import type { WebviewOptions, WebviewPanel } from 'coc-webview';
 import {
   commands,
   Document,
@@ -13,28 +14,12 @@ import {
   window,
   workspace,
   WorkspaceFolder,
-  extensions,
-  Extension,
 } from 'coc.nvim';
 import fs from 'fs';
 import { tmpdir } from 'os';
 import path from 'path';
 import { MarkdownPreviewEnhancedConfig } from './config';
-import { logger } from './util';
-import type { WebviewAPI, WebviewOptions, WebviewPanel } from 'coc-webview';
-
-let webviewExt: Extension<WebviewAPI> | undefined;
-
-const getWebviewAPI = () => {
-  if (!webviewExt) {
-    webviewExt = extensions.all.find((ext) => ext.id === 'coc-webview') as Extension<WebviewAPI> | undefined;
-  }
-  if (!webviewExt) {
-    void window.showErrorMessage('Please install the coc-webview extension');
-    throw new Error('Please install the coc-webview extension');
-  }
-  return webviewExt.exports;
-};
+import { getWebviewAPI, logger } from './util';
 
 // http://www.typescriptlang.org/play/
 // https://github.com/Microsoft/vscode/blob/master/extensions/markdown/media/main.js
@@ -100,24 +85,6 @@ export class MarkdownPreviewEnhancedView {
             vscode_mpe_version: extensionVersion,
           });
           fs.writeFileSync(path.resolve(mume.getExtensionConfigPath(), 'config.json'), JSON.stringify(config));
-
-          if (!mume.configs.config['vscode_mpe_version']) {
-            // Only show once
-            const actions = ['Open GitHub Sponsors', 'I already sponsored'];
-            void window
-              .showInformationMessage(
-                'If you like using markdown-preview-enhanced, please consider sponsoring the developer to help make this project better 😊.',
-                ...actions,
-              )
-              .then((value) => {
-                if (value === actions[0]) {
-                  mume.utility.openFile('https://github.com/sponsors/shd101wyy');
-                } else if (value === actions[1]) {
-                  config['already_sponsored'] = true;
-                  fs.writeFileSync(path.resolve(mume.getExtensionConfigPath(), 'config.json'), JSON.stringify(config));
-                }
-              });
-          }
         }
       })
       .catch((error) => {
