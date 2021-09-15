@@ -4,15 +4,19 @@ import path from 'path';
 import { pasteImageFile, uploadImageFile } from './image-helper';
 import { getPreviewUri, isMarkdownFile, MarkdownPreviewEnhancedView } from './preview-content-provider';
 import { getWebviewAPI, logger } from './util';
+import {} from 'coc-helper';
 
 let editorScrollDelay = Date.now();
 
-async function openVsplit(uri: Uri) {
+async function openInVim(uri: Uri, type: 'edit' | 'vsplit') {
   const nvim = workspace.nvim;
   const escapedPath = await workspace.nvim.call('fnameescape', [uri.fsPath]);
   nvim.pauseNotification();
-  nvim.command('vsplit', true);
-  nvim.command(`edit ${escapedPath}`, true);
+  if (type === 'vsplit') {
+    nvim.command(`vsplit ${escapedPath}`, true);
+  } else {
+    nvim.command(`edit ${escapedPath}`, true);
+  }
   if (workspace.isVim) {
     // Avoid vim highlight not working,
     // https://github.com/weirongxu/coc-explorer/issues/113
@@ -75,36 +79,36 @@ export function activate(context: ExtensionContext) {
 
   async function customizeCSS() {
     const globalStyleLessFile = utility.addFileProtocol(path.resolve(getExtensionConfigPath(), './style.less'));
-    await openVsplit(Uri.parse(globalStyleLessFile));
+    await openInVim(Uri.parse(globalStyleLessFile), 'vsplit');
   }
 
   async function openMermaidConfig() {
     const mermaidConfigFilePath = utility.addFileProtocol(
       path.resolve(getExtensionConfigPath(), './mermaid_config.js'),
     );
-    await openVsplit(Uri.parse(mermaidConfigFilePath));
+    await openInVim(Uri.parse(mermaidConfigFilePath), 'vsplit');
   }
 
   async function openMathJaxConfig() {
     const mathjaxConfigFilePath = utility.addFileProtocol(
       path.resolve(getExtensionConfigPath(), './mathjax_config.js'),
     );
-    await openVsplit(Uri.parse(mathjaxConfigFilePath));
+    await openInVim(Uri.parse(mathjaxConfigFilePath), 'vsplit');
   }
 
   async function openKaTeXConfig() {
     const katexConfigFilePath = utility.addFileProtocol(path.resolve(getExtensionConfigPath(), './katex_config.js'));
-    await openVsplit(Uri.parse(katexConfigFilePath));
+    await openInVim(Uri.parse(katexConfigFilePath), 'vsplit');
   }
 
   async function extendParser() {
     const parserConfigPath = utility.addFileProtocol(path.resolve(getExtensionConfigPath(), './parser.js'));
-    await openVsplit(Uri.parse(parserConfigPath));
+    await openInVim(Uri.parse(parserConfigPath), 'vsplit');
   }
 
   async function showUploadedImages() {
     const imageHistoryFilePath = utility.addFileProtocol(path.resolve(getExtensionConfigPath(), './image_history.md'));
-    await openVsplit(Uri.parse(imageHistoryFilePath));
+    await openInVim(Uri.parse(imageHistoryFilePath), 'vsplit');
   }
 
   async function cursorPosition() {
@@ -276,24 +280,20 @@ export function activate(context: ExtensionContext) {
     });
   }
 
-  async function clickTagA(_uri: Uri, href: string) {
+  async function clickTagA(uri: string, href: string) {
     const util = getWebviewAPI().util;
+    const curDoc = await workspace.document;
+    const openType = curDoc.uri === uri ? 'edit' : 'vsplit';
     href = decodeURIComponent(href);
-    href = href
-      .replace(/^vscode\-resource:\/\//, '')
-      .replace(/^vscode\-webview\-resource:\/\/(.+?)\//, '')
-      .replace(/^file\/\/\//, 'file:///')
-      .replace(/^https?:\/\/(.+?)\.vscode-webview-test.com\/vscode-resource\/file\/+/, 'file:///')
-      .replace(/^https?:\/\/file(.+?)\.vscode-webview\.net\/+/, 'file:///');
-    if (['.pdf', '.xls', '.xlsx', '.doc', '.ppt', '.docx', '.pptx'].indexOf(path.extname(href)) >= 0) {
+    const resourceUri = util.ResourceUri.parse(href);
+    const fsPath = resourceUri?.fsPath;
+    if (!fsPath) {
+      return util.openUri(href);
+    }
+    if (['.pdf', '.xls', '.xlsx', '.doc', '.ppt', '.docx', '.pptx'].indexOf(path.extname(fsPath)) >= 0) {
       util.openUri(href);
-    } else if (href.match(/^file:\/\/\//)) {
-      // openFilePath = href.slice(8) # remove protocol
-      let openFilePath = utility.addFileProtocol(href.replace(/(\s*)[\#\?](.+)$/, '')); // remove #anchor and ?params...
-      openFilePath = decodeURI(openFilePath);
-      await openVsplit(Uri.parse(openFilePath));
     } else {
-      util.openUri(href);
+      await openInVim(Uri.file(fsPath), openType);
     }
   }
 
@@ -471,7 +471,11 @@ async function revealLine(uri: string, line: number) {
     const fraction = line - sourceLine;
     const text = doc.getline(sourceLine);
     const start = Math.floor(fraction * text.length);
-    const win = workspace.nvim.createWindow(doc.winid);
+    const winnr = await workspace.nvim.call('bufwinnr', [doc.bufnr]);
+    if (winnr === -1) return;
+    const winid = await workspace.nvim.call('win_getid', [winnr]);
+    const win = workspace.nvim.createWindow(winid);
+    if (!(await win.valid)) return;
     editorScrollDelay = Date.now() + 500;
     await win.setCursor([sourceLine + 1, start]);
     editorScrollDelay = Date.now() + 500;
