@@ -15,8 +15,6 @@ import {
   workspace,
   WorkspaceFolder,
 } from 'coc.nvim';
-import fs from 'fs';
-import { tmpdir } from 'os';
 import path from 'path';
 import { MarkdownPreviewEnhancedConfig } from './config';
 import { getWebviewAPI, logger } from './util';
@@ -77,15 +75,6 @@ export class MarkdownPreviewEnhancedView {
             return filePath;
           }
         });
-
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const extensionVersion = require(path.resolve(this.context.extensionPath, './package.json'))['version'];
-        if (extensionVersion !== mume.configs.config['vscode_mpe_version']) {
-          const config = Object.assign({}, mume.configs.config, {
-            vscode_mpe_version: extensionVersion,
-          });
-          fs.writeFileSync(path.resolve(mume.getExtensionConfigPath(), 'config.json'), JSON.stringify(config));
-        }
       })
       .catch((error) => {
         void window.showErrorMessage(error.toString());
@@ -317,16 +306,8 @@ export class MarkdownPreviewEnhancedView {
     return engine;
   }
 
-  private getWebviewOptions(sourceUri: Uri): WebviewOptions {
-    const localResourceRoots = [
-      Uri.file(this.context.extensionPath),
-      Uri.file(mume.utility.extensionDirectoryPath),
-      Uri.file(mume.getExtensionConfigPath()),
-      Uri.file(tmpdir()),
-      Uri.file(this.getProjectDirectoryPath(sourceUri, workspace.workspaceFolders) || path.dirname(sourceUri.fsPath)),
-    ];
+  private getWebviewOptions(): WebviewOptions {
     return {
-      localResourceRoots,
       enableScripts: true, // TODO: This might be set by enableScriptExecution config. But for now we just enable it.
     };
   }
@@ -344,7 +325,7 @@ export class MarkdownPreviewEnhancedView {
       const newResourceRoot =
         this.getProjectDirectoryPath(sourceUri, workspace.workspaceFolders) || path.dirname(sourceUri.fsPath);
       if (oldResourceRoot !== newResourceRoot) {
-        this.singlePreviewPanel.webview.options = this.getWebviewOptions(sourceUri);
+        this.singlePreviewPanel.webview.options = this.getWebviewOptions();
       }
       previewPanel = this.singlePreviewPanel;
       this.singlePreviewPanelSourceUriTarget = sourceUri;
@@ -358,7 +339,7 @@ export class MarkdownPreviewEnhancedView {
           openURL,
           routeName: 'markdown-preview-enhanced',
         },
-        this.getWebviewOptions(sourceUri),
+        this.getWebviewOptions(),
       );
       previewPanel.iconPath = Uri.file(path.join(this.context.extensionPath, 'media', 'preview.svg'));
 
