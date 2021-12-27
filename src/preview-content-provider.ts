@@ -466,7 +466,7 @@ export class MarkdownPreviewEnhancedView {
     }
 
     // not presentation mode
-    const doc = workspace.getDocument(sourceUri.fsPath);
+    const doc = workspace.getDocument(sourceUri.path);
     const text = doc.getDocumentContent();
     this.previewPostMessage(sourceUri, {
       command: 'startParsingMarkdown',
