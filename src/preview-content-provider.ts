@@ -60,21 +60,23 @@ export class MarkdownPreviewEnhancedView {
       .then(async () => {
         mume.onDidChangeConfigFile(this.refreshAllPreviews.bind(this));
         MarkdownEngine.onModifySource(this.modifySource.bind(this));
-        useExternalAddFileProtocolFunction((filePath: string, preview: WebviewPanel) => {
-          if (preview) {
-            return preview.webview
-              .asWebviewUri(Uri.file(filePath))
-              .toString(true)
-              .replace(/%3F/gi, '?')
-              .replace(/%23/g, '#');
-          } else {
-            if (!filePath.startsWith('file://')) {
-              filePath = 'file:///' + filePath;
+        useExternalAddFileProtocolFunction(
+          (filePath: string, preview: WebviewPanel) => {
+            if (preview) {
+              return preview.webview
+                .asWebviewUri(Uri.file(filePath))
+                .toString(true)
+                .replace(/%3F/gi, '?')
+                .replace(/%23/g, '#');
+            } else {
+              if (!filePath.startsWith('file://')) {
+                filePath = `file:///${filePath}`;
+              }
+              filePath = filePath.replace(/^file:\/+/, 'file:///');
+              return filePath;
             }
-            filePath = filePath.replace(/^file\:\/+/, 'file:///');
-            return filePath;
-          }
-        });
+          },
+        );
       })
       .catch((error) => {
         void window.showErrorMessage(error.toString());
@@ -84,7 +86,7 @@ export class MarkdownPreviewEnhancedView {
   private refreshAllPreviews() {
     // clear caches
     for (const key in this.engineMaps) {
-      if (this.engineMaps.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(this.engineMaps, key)) {
         const engine = this.engineMaps[key];
         if (engine) {
           // No need to resetConfig.
@@ -103,7 +105,7 @@ export class MarkdownPreviewEnhancedView {
       this.refreshPreviewPanel(this.singlePreviewPanelSourceUriTarget);
     } else {
       for (const key in this.previewMaps) {
-        if (this.previewMaps.hasOwnProperty(key)) {
+        if (Object.prototype.hasOwnProperty.call(this.previewMaps, key)) {
           this.refreshPreviewPanel(Uri.file(key));
         }
       }
@@ -116,7 +118,11 @@ export class MarkdownPreviewEnhancedView {
    * @param result
    * @param filePath
    */
-  private async modifySource(codeChunkData: mume.CodeChunkData, result: string, filePath: string): Promise<string> {
+  private async modifySource(
+    codeChunkData: mume.CodeChunkData,
+    result: string,
+    filePath: string,
+  ): Promise<string> {
     async function insertResult(i: number, doc: Document) {
       const lineCount = doc.lineCount;
       let start = 0;
@@ -141,14 +147,20 @@ export class MarkdownPreviewEnhancedView {
         // if output not changed, then no need to modify editor buffer
         let r = '';
         for (let i2 = start + 2; i2 < end - 1; i2++) {
-          r += doc.getline(i2) + '\n';
+          r += `${doc.getline(i2)}\n`;
         }
-        if (r === result + '\n') {
+        if (r === `${result}\n`) {
           return '';
         } // no need to modify output
 
         await doc.applyEdits([
-          TextEdit.replace(Range.create(Position.create(start + 2, 0), Position.create(end - 1, 0)), result + '\n'),
+          TextEdit.replace(
+            Range.create(
+              Position.create(start + 2, 0),
+              Position.create(end - 1, 0),
+            ),
+            `${result}\n`,
+          ),
         ]);
         return '';
       } else {
@@ -165,16 +177,17 @@ export class MarkdownPreviewEnhancedView {
     const doc = await workspace.document;
     if (this.formatPathIfNecessary(doc.uri) === filePath) {
       let codeChunkOffset = 0;
-      const targetCodeChunkOffset = codeChunkData.normalizedInfo.attributes['code_chunk_offset'];
+      const targetCodeChunkOffset =
+        codeChunkData.normalizedInfo.attributes['code_chunk_offset'];
 
       const lineCount = doc.lineCount;
       for (let i2 = 0; i2 < lineCount; i2++) {
         const line = doc.getline(i2);
-        if (line.match(/^```(.+)\"?cmd\"?\s*[=\s}]/)) {
+        if (line.match(/^```(.+)"?cmd"?\s*[=\s}]/)) {
           if (codeChunkOffset === targetCodeChunkOffset) {
             i2 = i2 + 1;
             while (i2 < lineCount) {
-              if (doc.getline(i2).match(/^\`\`\`\s*/)) {
+              if (doc.getline(i2).match(/^```\s*/)) {
                 break;
               }
               i2 += 1;
@@ -183,7 +196,7 @@ export class MarkdownPreviewEnhancedView {
           } else {
             codeChunkOffset++;
           }
-        } else if (line.match(/\@import\s+(.+)\"?cmd\"?\s*[=\s}]/)) {
+        } else if (line.match(/@import\s+(.+)"?cmd"?\s*[=\s}]/)) {
           if (codeChunkOffset === targetCodeChunkOffset) {
             return insertResult(i2, doc);
           } else {
@@ -263,20 +276,34 @@ export class MarkdownPreviewEnhancedView {
    */
   private formatPathIfNecessary(pathString: string) {
     if (process.platform === 'win32') {
-      pathString = pathString.replace(/^([a-zA-Z])\:\\/, (_, $1) => `${$1.toUpperCase()}:\\`);
+      pathString = pathString.replace(
+        /^([a-zA-Z]):\\/,
+        (_, $1: string) => `${$1.toUpperCase()}:\\`,
+      );
     }
     return pathString;
   }
 
-  private getProjectDirectoryPath(sourceUri: Uri, workspaceFolders: readonly WorkspaceFolder[] = []) {
-    const possibleWorkspaceFolders = workspaceFolders.filter((workspaceFolder) => {
-      return path.dirname(sourceUri.path.toUpperCase()).indexOf(workspaceFolder.uri.toUpperCase()) >= 0;
-    });
+  private getProjectDirectoryPath(
+    sourceUri: Uri,
+    workspaceFolders: readonly WorkspaceFolder[] = [],
+  ) {
+    const possibleWorkspaceFolders = workspaceFolders.filter(
+      (workspaceFolder) => {
+        return (
+          path
+            .dirname(sourceUri.path.toUpperCase())
+            .indexOf(workspaceFolder.uri.toUpperCase()) >= 0
+        );
+      },
+    );
 
     let projectDirectoryPath: string;
     if (possibleWorkspaceFolders.length) {
       // We pick the workspaceUri that has the longest path
-      const workspaceFolder = possibleWorkspaceFolders.sort((x, y) => y.uri.length - x.uri.length)[0];
+      const workspaceFolder = possibleWorkspaceFolders.sort(
+        (x, y) => y.uri.length - x.uri.length,
+      )[0];
       projectDirectoryPath = workspaceFolder.uri;
     } else {
       projectDirectoryPath = '';
@@ -297,7 +324,10 @@ export class MarkdownPreviewEnhancedView {
     if (!engine) {
       engine = new MarkdownEngine({
         filePath: this.getFilePath(sourceUri),
-        projectDirectoryPath: this.getProjectDirectoryPath(sourceUri, workspace.workspaceFolders),
+        projectDirectoryPath: this.getProjectDirectoryPath(
+          sourceUri,
+          workspace.workspaceFolders,
+        ),
         config: this.config,
       });
       this.engineMaps[sourceUri.fsPath] = engine;
@@ -306,9 +336,10 @@ export class MarkdownPreviewEnhancedView {
     return engine;
   }
 
-  private getWebviewOptions(): WebviewOptions {
+  private getWebviewOptions(localResourceRoots?: Uri[]): WebviewOptions {
     return {
       enableScripts: true, // TODO: This might be set by enableScriptExecution config. But for now we just enable it.
+      localResourceRoots,
     };
   }
 
@@ -320,18 +351,34 @@ export class MarkdownPreviewEnhancedView {
         return;
       }
       const oldResourceRoot =
-        this.getProjectDirectoryPath(this.singlePreviewPanelSourceUriTarget, workspace.workspaceFolders) ||
-        path.dirname(this.singlePreviewPanelSourceUriTarget.fsPath);
+        this.getProjectDirectoryPath(
+          this.singlePreviewPanelSourceUriTarget,
+          workspace.workspaceFolders,
+        ) || path.dirname(this.singlePreviewPanelSourceUriTarget.fsPath);
       const newResourceRoot =
-        this.getProjectDirectoryPath(sourceUri, workspace.workspaceFolders) || path.dirname(sourceUri.fsPath);
+        this.getProjectDirectoryPath(sourceUri, workspace.workspaceFolders) ||
+        path.dirname(sourceUri.fsPath);
       if (oldResourceRoot !== newResourceRoot) {
-        this.singlePreviewPanel.webview.options = this.getWebviewOptions();
+        this.singlePreviewPanel.dispose();
+        return this.initPreview(sourceUri, doc, openURL);
+      } else {
+        previewPanel = this.singlePreviewPanel;
+        this.singlePreviewPanelSourceUriTarget = sourceUri;
       }
-      previewPanel = this.singlePreviewPanel;
-      this.singlePreviewPanelSourceUriTarget = sourceUri;
     } else if (this.previewMaps[sourceUri.fsPath]) {
       previewPanel = this.previewMaps[sourceUri.fsPath];
     } else {
+      // new preview panel
+      const localResourceRoots = [
+        Uri.file(this.context.extensionPath),
+        Uri.file(mume.utility.extensionDirectoryPath),
+        Uri.file(mume.getExtensionConfigPath()),
+        // Uri.file(tmpdir()),
+        Uri.file(
+          this.getProjectDirectoryPath(sourceUri, workspace.workspaceFolders) ||
+            path.dirname(sourceUri.fsPath),
+        ),
+      ];
       previewPanel = await getWebviewAPI().createWebviewPanel(
         'markdown-preview-enhanced',
         `Preview ${path.basename(sourceUri.fsPath)}`,
@@ -339,14 +386,18 @@ export class MarkdownPreviewEnhancedView {
           openURL,
           routeName: 'markdown-preview-enhanced',
         },
-        this.getWebviewOptions(),
+        this.getWebviewOptions(localResourceRoots),
       );
-      previewPanel.iconPath = Uri.file(path.join(this.context.extensionPath, 'media', 'preview.svg'));
+      previewPanel.iconPath = Uri.file(
+        path.join(this.context.extensionPath, 'media', 'preview.svg'),
+      );
 
       // register previewPanel message events
       previewPanel.webview.onDidReceiveMessage(
-        (message) => {
-          commands.executeCommand(`_mume.${message.command}`, ...message.args).catch(logger.error);
+        (message: { command: string; args: unknown[] }) => {
+          commands
+            .executeCommand(`_mume.${message.command}`, ...message.args)
+            .catch(logger.error);
         },
         null,
         this.context.subscriptions,
@@ -416,7 +467,7 @@ export class MarkdownPreviewEnhancedView {
     } else {
       const previewPanels: WebviewPanel[] = [];
       for (const key in this.previewMaps) {
-        if (this.previewMaps.hasOwnProperty(key)) {
+        if (Object.prototype.hasOwnProperty.call(this.previewMaps, key)) {
           const previewPanel = this.previewMaps[key];
           if (previewPanel) {
             previewPanels.push(previewPanel);
@@ -434,7 +485,7 @@ export class MarkdownPreviewEnhancedView {
     this.singlePreviewPanelSourceUriTarget = null;
   }
 
-  public previewPostMessage(sourceUri: Uri, message: any) {
+  public previewPostMessage(sourceUri: Uri, message: unknown) {
     const preview = this.getPreview(sourceUri);
     if (preview) {
       void preview.webview.postMessage(message);
@@ -485,7 +536,8 @@ export class MarkdownPreviewEnhancedView {
       .then(({ html, tocHTML, JSAndCssFiles, yamlConfig }) => {
         // check JSAndCssFiles
         if (
-          JSON.stringify(JSAndCssFiles) !== JSON.stringify(this.jsAndCssFilesMaps[sourceUri.fsPath]) ||
+          JSON.stringify(JSAndCssFiles) !==
+            JSON.stringify(this.jsAndCssFilesMaps[sourceUri.fsPath]) ||
           yamlConfig['isPresentationMode']
         ) {
           this.jsAndCssFilesMaps[sourceUri.fsPath] = JSAndCssFiles;
@@ -508,7 +560,13 @@ export class MarkdownPreviewEnhancedView {
 
   public refreshPreviewPanel(sourceUri: Uri) {
     this.preview2EditorMap.forEach((doc, previewPanel) => {
-      if (previewPanel && doc && isMarkdownFile(doc.textDocument) && doc.uri && doc.uri === sourceUri.fsPath) {
+      if (
+        previewPanel &&
+        doc &&
+        isMarkdownFile(doc.textDocument) &&
+        doc.uri &&
+        doc.uri === sourceUri.fsPath
+      ) {
         void this.initPreview(sourceUri, doc, false);
       }
     });
@@ -538,7 +596,9 @@ export class MarkdownPreviewEnhancedView {
       engine
         .htmlExport({ offline })
         .then((dest) => {
-          void window.showInformationMessage(`File ${path.basename(dest)} was created at path: ${dest}`);
+          void window.showInformationMessage(
+            `File ${path.basename(dest)} was created at path: ${dest}`,
+          );
         })
         .catch((error) => {
           void window.showErrorMessage(error.toString());
@@ -552,7 +612,9 @@ export class MarkdownPreviewEnhancedView {
       engine
         .chromeExport({ fileType: type, openFileAfterGeneration: true })
         .then((dest) => {
-          void window.showInformationMessage(`File ${path.basename(dest)} was created at path: ${dest}`);
+          void window.showInformationMessage(
+            `File ${path.basename(dest)} was created at path: ${dest}`,
+          );
         })
         .catch((error) => {
           void window.showErrorMessage(error.toString());
@@ -569,10 +631,15 @@ export class MarkdownPreviewEnhancedView {
           if (dest.endsWith('?print-pdf')) {
             // presentation pdf
             void window.showInformationMessage(
-              `Please copy and open the link: { ${dest.replace(/\_/g, '\\_')} } in Chrome then Print as Pdf.`,
+              `Please copy and open the link: { ${dest.replace(
+                /_/g,
+                '\\_',
+              )} } in Chrome then Print as Pdf.`,
             );
           } else {
-            void window.showInformationMessage(`File ${path.basename(dest)} was created at path: ${dest}`);
+            void window.showInformationMessage(
+              `File ${path.basename(dest)} was created at path: ${dest}`,
+            );
           }
         })
         .catch((error) => {
@@ -587,7 +654,9 @@ export class MarkdownPreviewEnhancedView {
       engine
         .eBookExport({ fileType, runAllCodeChunks: false })
         .then((dest) => {
-          void window.showInformationMessage(`eBook ${path.basename(dest)} was created as path: ${dest}`);
+          void window.showInformationMessage(
+            `eBook ${path.basename(dest)} was created as path: ${dest}`,
+          );
         })
         .catch((error) => {
           void window.showErrorMessage(error.toString());
@@ -601,7 +670,9 @@ export class MarkdownPreviewEnhancedView {
       engine
         .pandocExport({ openFileAfterGeneration: true })
         .then((dest) => {
-          void window.showInformationMessage(`Document ${path.basename(dest)} was created as path: ${dest}`);
+          void window.showInformationMessage(
+            `Document ${path.basename(dest)} was created as path: ${dest}`,
+          );
         })
         .catch((error) => {
           void window.showErrorMessage(error.toString());
@@ -615,7 +686,9 @@ export class MarkdownPreviewEnhancedView {
       engine
         .markdownExport({})
         .then((dest) => {
-          void window.showInformationMessage(`Document ${path.basename(dest)} was created as path: ${dest}`);
+          void window.showInformationMessage(
+            `Document ${path.basename(dest)} was created as path: ${dest}`,
+          );
         })
         .catch((error) => {
           void window.showErrorMessage(error.toString());
@@ -689,7 +762,7 @@ export class MarkdownPreviewEnhancedView {
       } else {
         this.config = newConfig;
         for (const fsPath in this.engineMaps) {
-          if (this.engineMaps.hasOwnProperty(fsPath)) {
+          if (Object.prototype.hasOwnProperty.call(this.engineMaps, fsPath)) {
             const engine = this.engineMaps[fsPath];
             engine.updateConfiguration(newConfig);
           }
@@ -736,7 +809,7 @@ export function getPreviewUri(uri: Uri) {
   } else {
     previewUri = uri.with({
       scheme: 'markdown-preview-enhanced',
-      path: uri.path + '.rendered',
+      path: `${uri.path}.rendered`,
       query: uri.toString(),
     });
   }
@@ -745,5 +818,8 @@ export function getPreviewUri(uri: Uri) {
 
 export function isMarkdownFile(document: TextDocument) {
   const uri = Uri.parse(document.uri);
-  return document.languageId === 'markdown' && uri.scheme !== 'markdown-preview-enhanced'; // prevent processing of own documents
+  return (
+    document.languageId === 'markdown' &&
+    uri.scheme !== 'markdown-preview-enhanced'
+  ); // prevent processing of own documents
 }

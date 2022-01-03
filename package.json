@@ -29,33 +29,34 @@
   "prettier": {
     "singleQuote": true,
     "trailingComma": "all",
-    "printWidth": 120,
+    "printWidth": 80,
     "semi": true
   },
   "devDependencies": {
-    "@types/eslint": "^7.28.1",
+    "@types/eslint": "^8.2.1",
     "@types/eslint-plugin-prettier": "^3.1.0",
-    "@types/node": "^16.10.3",
-    "@types/prettier": "^2.4.1",
+    "@types/node": "^17.0.5",
+    "@types/prettier": "^2.4.2",
     "@types/rimraf": "^3.0.2",
-    "@types/uuid": "^8.3.1",
-    "@typescript-eslint/eslint-plugin": "^5.0.0",
-    "@typescript-eslint/parser": "^5.0.0",
+    "@types/uuid": "^8.3.3",
+    "@typescript-eslint/eslint-plugin": "^5.8.1",
+    "@typescript-eslint/parser": "^5.8.1",
     "coc-helper": "^0.12.0",
-    "coc-webview": "^0.8.0",
+    "coc-webview": "^0.9.0",
     "coc.nvim": "^0.0.81-next.6",
-    "esbuild": "^0.13.4",
-    "esbuild-plugin-alias": "^0.2.0",
-    "eslint": "^8.0.0",
+    "esbuild": "^0.14.9",
+    "esbuild-plugin-alias": "^0.2.1",
+    "eslint": "^8.5.0",
     "eslint-config-prettier": "^8.1.0",
     "eslint-plugin-prettier": "^4.0.0",
     "npm-run-all": "^4.1.5",
-    "prettier": "^2.4.1",
+    "prettier": "^2.5.1",
     "rimraf": "^3.0.2",
-    "typescript": "^4.4.3"
+    "typescript": "^4.5.4"
   },
   "dependencies": {
-    "@shd101wyy/mume": "^0.6.8"
+    "@raidou/eslint-config-base": "^1.4.0",
+    "@shd101wyy/mume": "^0.6.9"
   },
   "activationEvents": [
     "onCommand:markdown-preview-enhanced.openPreview",

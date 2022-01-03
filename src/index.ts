@@ -1,16 +1,33 @@
 import { getExtensionConfigPath, utility } from '@shd101wyy/mume';
-import { commands, events, ExtensionContext, Position, Range, TextEdit, Uri, window, workspace } from 'coc.nvim';
-import path from 'path';
-import { pasteImageFile, uploadImageFile } from './image-helper';
-import { getPreviewUri, isMarkdownFile, MarkdownPreviewEnhancedView } from './preview-content-provider';
-import { getWebviewAPI, logger } from './util';
 import {} from 'coc-helper';
+import {
+  commands,
+  events,
+  ExtensionContext,
+  Position,
+  Range,
+  TextEdit,
+  Uri,
+  window,
+  workspace,
+} from 'coc.nvim';
+import path from 'path';
+import { URL } from 'url';
+import { pasteImageFile, uploadImageFile } from './image-helper';
+import {
+  getPreviewUri,
+  isMarkdownFile,
+  MarkdownPreviewEnhancedView,
+} from './preview-content-provider';
+import { getWebviewAPI, logger } from './util';
 
 let editorScrollDelay = Date.now();
 
 async function openInVim(uri: Uri, type: 'edit' | 'vsplit') {
   const nvim = workspace.nvim;
-  const escapedPath = await workspace.nvim.call('fnameescape', [uri.fsPath]);
+  const escapedPath: string = await workspace.nvim.call('fnameescape', [
+    uri.fsPath,
+  ]);
   nvim.pauseNotification();
   if (type === 'vsplit') {
     nvim.command(`vsplit ${escapedPath}`, true);
@@ -73,12 +90,16 @@ export function activate(context: ExtensionContext) {
     if (breakOnSingleNewLine) {
       void window.showInformationMessage('Break On Single New Line is enabled');
     } else {
-      void window.showInformationMessage('Break On Single New Line is disabled');
+      void window.showInformationMessage(
+        'Break On Single New Line is disabled',
+      );
     }
   }
 
   async function customizeCSS() {
-    const globalStyleLessFile = utility.addFileProtocol(path.resolve(getExtensionConfigPath(), './style.less'));
+    const globalStyleLessFile = utility.addFileProtocol(
+      path.resolve(getExtensionConfigPath(), './style.less'),
+    );
     await openInVim(Uri.parse(globalStyleLessFile), 'vsplit');
   }
 
@@ -97,17 +118,23 @@ export function activate(context: ExtensionContext) {
   }
 
   async function openKaTeXConfig() {
-    const katexConfigFilePath = utility.addFileProtocol(path.resolve(getExtensionConfigPath(), './katex_config.js'));
+    const katexConfigFilePath = utility.addFileProtocol(
+      path.resolve(getExtensionConfigPath(), './katex_config.js'),
+    );
     await openInVim(Uri.parse(katexConfigFilePath), 'vsplit');
   }
 
   async function extendParser() {
-    const parserConfigPath = utility.addFileProtocol(path.resolve(getExtensionConfigPath(), './parser.js'));
+    const parserConfigPath = utility.addFileProtocol(
+      path.resolve(getExtensionConfigPath(), './parser.js'),
+    );
     await openInVim(Uri.parse(parserConfigPath), 'vsplit');
   }
 
   async function showUploadedImages() {
-    const imageHistoryFilePath = utility.addFileProtocol(path.resolve(getExtensionConfigPath(), './image_history.md'));
+    const imageHistoryFilePath = utility.addFileProtocol(
+      path.resolve(getExtensionConfigPath(), './image_history.md'),
+    );
     await openInVim(Uri.parse(imageHistoryFilePath), 'vsplit');
   }
 
@@ -119,12 +146,16 @@ export function activate(context: ExtensionContext) {
 
   async function insertNewSlide() {
     const doc = await workspace.document;
-    await doc.applyEdits([TextEdit.insert(await cursorPosition(), '<!-- slide -->\n')]);
+    await doc.applyEdits([
+      TextEdit.insert(await cursorPosition(), '<!-- slide -->\n'),
+    ]);
   }
 
   async function insertPagebreak() {
     const doc = await workspace.document;
-    await doc.applyEdits([TextEdit.insert(await cursorPosition(), '<!-- pagebreak -->\n')]);
+    await doc.applyEdits([
+      TextEdit.insert(await cursorPosition(), '<!-- pagebreak -->\n'),
+    ]);
   }
 
   async function createTOC() {
@@ -151,7 +182,9 @@ export function activate(context: ExtensionContext) {
   }
 
   async function openImageHelper() {
-    await contentProvider.openImageHelper(Uri.parse((await workspace.document).uri));
+    await contentProvider.openImageHelper(
+      Uri.parse((await workspace.document).uri),
+    );
   }
 
   function webviewFinishLoading(uri: string) {
@@ -167,7 +200,12 @@ export function activate(context: ExtensionContext) {
   async function insertImageUrl(uri: string, imageUrl: string) {
     const doc = workspace.getDocument(uri);
     if (doc && isMarkdownFile(doc.textDocument)) {
-      await doc.applyEdits([TextEdit.insert(await cursorPosition(), `![enter image description here](${imageUrl})`)]);
+      await doc.applyEdits([
+        TextEdit.insert(
+          await cursorPosition(),
+          `![enter image description here](${imageUrl})`,
+        ),
+      ]);
     }
   }
 
@@ -283,17 +321,20 @@ export function activate(context: ExtensionContext) {
   async function clickTagA(uri: string, href: string) {
     const util = getWebviewAPI().util;
     const curDoc = await workspace.document;
-    const openType = curDoc.uri === uri ? 'edit' : 'vsplit';
     href = decodeURIComponent(href);
-    const resourceUri = util.ResourceUri.parse(href);
-    const fsPath = resourceUri?.fsPath;
-    if (!fsPath) {
-      return util.openUri(href);
+    if (!href) {
+      return;
     }
-    if (['.pdf', '.xls', '.xlsx', '.doc', '.ppt', '.docx', '.pptx'].indexOf(path.extname(fsPath)) >= 0) {
+    if (
+      ['.pdf', '.xls', '.xlsx', '.doc', '.ppt', '.docx', '.pptx'].indexOf(
+        path.extname(uri),
+      ) >= 0
+    ) {
       util.openUri(href);
     } else {
-      await openInVim(Uri.file(fsPath), openType);
+      const url = new URL(href);
+      const openType = curDoc.uri === uri ? 'edit' : 'vsplit';
+      await openInVim(Uri.parse(url.pathname), openType);
     }
   }
 
@@ -311,7 +352,13 @@ export function activate(context: ExtensionContext) {
       line = line.replace(/\[[xX]\]/, '[ ]');
     }
     await doc.applyEdits([
-      TextEdit.replace(Range.create(Position.create(dataLineNum, 0), Position.create(dataLineNum, line.length)), line),
+      TextEdit.replace(
+        Range.create(
+          Position.create(dataLineNum, 0),
+          Position.create(dataLineNum, line.length),
+        ),
+        line,
+      ),
     ]);
   }
 
@@ -374,10 +421,13 @@ export function activate(context: ExtensionContext) {
         const doc = await workspace.document;
         if (isMarkdownFile(doc.textDocument)) {
           const sourceUri = Uri.parse(doc.uri);
-          const config = workspace.getConfiguration('markdown-preview-enhanced');
-          const automaticallyShowPreviewOfMarkdownBeingEdited = config.get<boolean>(
-            'automaticallyShowPreviewOfMarkdownBeingEdited',
+          const config = workspace.getConfiguration(
+            'markdown-preview-enhanced',
           );
+          const automaticallyShowPreviewOfMarkdownBeingEdited =
+            config.get<boolean>(
+              'automaticallyShowPreviewOfMarkdownBeingEdited',
+            );
           const isUsingSinglePreview = config.get<boolean>('singlePreview');
 
           /**
@@ -385,7 +435,10 @@ export function activate(context: ExtensionContext) {
            * When we switched text ed()tor, update preview to that text editor.
            */
           if (contentProvider.isPreviewOn(sourceUri)) {
-            if (isUsingSinglePreview && !contentProvider.previewHasTheSameSingleSourceUri(sourceUri)) {
+            if (
+              isUsingSinglePreview &&
+              !contentProvider.previewHasTheSameSingleSourceUri(sourceUri)
+            ) {
               await contentProvider.initPreview(sourceUri, doc, false);
             } else if (!isUsingSinglePreview) {
               const previewPanel = contentProvider.getPreview(sourceUri);
@@ -413,50 +466,128 @@ export function activate(context: ExtensionContext) {
   }))
   */
 
-  const registerCommand = (cmd: string, impl: (...args: any[]) => void) =>
+  const registerCommand = (cmd: string, impl: (...args: unknown[]) => void) =>
     commands.registerCommand(cmd, logger.asyncCatch(impl));
 
   context.subscriptions.push(
-    registerCommand('markdown-preview-enhanced.openPreview', () => openPreview(true)),
-    registerCommand('markdown-preview-enhanced.openPreviewBackground', () => openPreview(false)),
-    registerCommand('markdown-preview-enhanced.toggleScrollSync', toggleScrollSync),
-    registerCommand('markdown-preview-enhanced.toggleLiveUpdate', toggleLiveUpdate),
-    registerCommand('markdown-preview-enhanced.toggleBreakOnSingleNewLine', toggleBreakOnSingleNewLine),
-    registerCommand('markdown-preview-enhanced.openImageHelper', openImageHelper),
-    registerCommand('markdown-preview-enhanced.runAllCodeChunks', runAllCodeChunksCommand),
-    registerCommand('markdown-preview-enhanced.runCodeChunk', runCodeChunkCommand),
-    registerCommand('markdown-preview-enhanced.syncPreview', syncPreview),
-    registerCommand('markdown-preview-enhanced.customizeCss', customizeCSS),
-    registerCommand('markdown-preview-enhanced.openMermaidConfig', openMermaidConfig),
-    registerCommand('markdown-preview-enhanced.openMathJaxConfig', openMathJaxConfig),
-    registerCommand('markdown-preview-enhanced.openKaTeXConfig', openKaTeXConfig),
-    registerCommand('markdown-preview-enhanced.extendParser', extendParser),
-    registerCommand('markdown-preview-enhanced.showUploadedImages', showUploadedImages),
-    registerCommand('markdown-preview-enhanced.insertNewSlide', insertNewSlide),
-    registerCommand('markdown-preview-enhanced.insertTable', insertTable),
-    registerCommand('markdown-preview-enhanced.insertPagebreak', insertPagebreak),
-    registerCommand('markdown-preview-enhanced.createTOC', createTOC),
-    registerCommand('_mume.revealLine', revealLine),
-    registerCommand('_mume.insertImageUrl', insertImageUrl),
-    registerCommand('_mume.pasteImageFile', pasteImageFile),
-    registerCommand('_mume.uploadImageFile', uploadImageFile),
-    registerCommand('_mume.refreshPreview', refreshPreview),
-    registerCommand('_mume.openInBrowser', openInBrowser),
-    registerCommand('_mume.htmlExport', htmlExport),
-    registerCommand('_mume.chromeExport', chromeExport),
-    registerCommand('_mume.princeExport', princeExport),
-    registerCommand('_mume.eBookExport', eBookExport),
-    registerCommand('_mume.pandocExport', pandocExport),
-    registerCommand('_mume.markdownExport', markdownExport),
-    registerCommand('_mume.webviewFinishLoading', webviewFinishLoading),
+    registerCommand(
+      'markdown-preview-enhanced.openPreview',
+      logger.asyncCatch(() => openPreview(true)),
+    ),
+    registerCommand(
+      'markdown-preview-enhanced.openPreviewBackground',
+      logger.asyncCatch(() => openPreview(false)),
+    ),
+    registerCommand(
+      'markdown-preview-enhanced.toggleScrollSync',
+      toggleScrollSync,
+    ),
+    registerCommand(
+      'markdown-preview-enhanced.toggleLiveUpdate',
+      toggleLiveUpdate,
+    ),
+    registerCommand(
+      'markdown-preview-enhanced.toggleBreakOnSingleNewLine',
+      toggleBreakOnSingleNewLine,
+    ),
+    registerCommand(
+      'markdown-preview-enhanced.openImageHelper',
+      logger.asyncCatch(openImageHelper),
+    ),
+    registerCommand(
+      'markdown-preview-enhanced.runAllCodeChunks',
+      logger.asyncCatch(runAllCodeChunksCommand),
+    ),
+    registerCommand(
+      'markdown-preview-enhanced.runCodeChunk',
+      logger.asyncCatch(runCodeChunkCommand),
+    ),
+    registerCommand(
+      'markdown-preview-enhanced.syncPreview',
+      logger.asyncCatch(syncPreview),
+    ),
+    registerCommand(
+      'markdown-preview-enhanced.customizeCss',
+      logger.asyncCatch(customizeCSS),
+    ),
+    registerCommand(
+      'markdown-preview-enhanced.openMermaidConfig',
+      logger.asyncCatch(openMermaidConfig),
+    ),
+    registerCommand(
+      'markdown-preview-enhanced.openMathJaxConfig',
+      logger.asyncCatch(openMathJaxConfig),
+    ),
+    registerCommand(
+      'markdown-preview-enhanced.openKaTeXConfig',
+      logger.asyncCatch(openKaTeXConfig),
+    ),
+    registerCommand(
+      'markdown-preview-enhanced.extendParser',
+      logger.asyncCatch(extendParser),
+    ),
+    registerCommand(
+      'markdown-preview-enhanced.showUploadedImages',
+      logger.asyncCatch(showUploadedImages),
+    ),
+    registerCommand(
+      'markdown-preview-enhanced.insertNewSlide',
+      logger.asyncCatch(insertNewSlide),
+    ),
+    registerCommand(
+      'markdown-preview-enhanced.insertTable',
+      logger.asyncCatch(insertTable),
+    ),
+    registerCommand(
+      'markdown-preview-enhanced.insertPagebreak',
+      logger.asyncCatch(insertPagebreak),
+    ),
+    registerCommand(
+      'markdown-preview-enhanced.createTOC',
+      logger.asyncCatch(createTOC),
+    ),
+    registerCommand('_mume.revealLine', logger.asyncCatch(revealLine)),
+    registerCommand('_mume.insertImageUrl', logger.asyncCatch(insertImageUrl)),
+    registerCommand('_mume.pasteImageFile', logger.asyncCatch(pasteImageFile)),
+    registerCommand(
+      '_mume.uploadImageFile',
+      logger.asyncCatch(uploadImageFile),
+    ),
+    registerCommand('_mume.refreshPreview', logger.asyncCatch(refreshPreview)),
+    registerCommand('_mume.openInBrowser', logger.asyncCatch(openInBrowser)),
+    registerCommand('_mume.htmlExport', logger.asyncCatch(htmlExport)),
+    registerCommand('_mume.chromeExport', logger.asyncCatch(chromeExport)),
+    registerCommand('_mume.princeExport', logger.asyncCatch(princeExport)),
+    registerCommand('_mume.eBookExport', logger.asyncCatch(eBookExport)),
+    registerCommand('_mume.pandocExport', logger.asyncCatch(pandocExport)),
+    registerCommand('_mume.markdownExport', logger.asyncCatch(markdownExport)),
+    registerCommand(
+      '_mume.webviewFinishLoading',
+      logger.asyncCatch(webviewFinishLoading),
+    ),
     // registerCommand('_mume.cacheSVG', cacheSVG),
-    registerCommand('_mume.cacheCodeChunkResult', cacheCodeChunkResult),
-    registerCommand('_mume.runCodeChunk', runCodeChunk),
-    registerCommand('_mume.runAllCodeChunks', runAllCodeChunks),
-    registerCommand('_mume.clickTagA', clickTagA),
-    registerCommand('_mume.clickTaskListCheckbox', clickTaskListCheckbox),
-    registerCommand('_mume.showUploadedImageHistory', showUploadedImages),
-    registerCommand('_mume.setPreviewTheme', setPreviewTheme),
+    registerCommand(
+      '_mume.cacheCodeChunkResult',
+      logger.asyncCatch(cacheCodeChunkResult),
+    ),
+    registerCommand('_mume.runCodeChunk', logger.asyncCatch(runCodeChunk)),
+    registerCommand(
+      '_mume.runAllCodeChunks',
+      logger.asyncCatch(runAllCodeChunks),
+    ),
+    registerCommand('_mume.clickTagA', logger.asyncCatch(clickTagA)),
+    registerCommand(
+      '_mume.clickTaskListCheckbox',
+      logger.asyncCatch(clickTaskListCheckbox),
+    ),
+    registerCommand(
+      '_mume.showUploadedImageHistory',
+      logger.asyncCatch(showUploadedImages),
+    ),
+    registerCommand(
+      '_mume.setPreviewTheme',
+      logger.asyncCatch(setPreviewTheme),
+    ),
   );
 }
 

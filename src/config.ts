@@ -64,17 +64,29 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     this.enableTypographer = config.get<boolean>('enableTypographer')!;
     this.enableWikiLinkSyntax = config.get<boolean>('enableWikiLinkSyntax')!;
     this.enableLinkify = config.get<boolean>('enableLinkify')!;
-    this.useGitHubStylePipedLink = config.get<boolean>('useGitHubStylePipedLink')!;
+    this.useGitHubStylePipedLink = config.get<boolean>(
+      'useGitHubStylePipedLink',
+    )!;
     this.wikiLinkFileExtension = config.get<string>('wikiLinkFileExtension')!;
     this.enableEmojiSyntax = config.get<boolean>('enableEmojiSyntax')!;
-    this.enableExtendedTableSyntax = config.get<boolean>('enableExtendedTableSyntax')!;
-    this.enableCriticMarkupSyntax = config.get<boolean>('enableCriticMarkupSyntax')!;
-    this.frontMatterRenderingOption = config.get<string>('frontMatterRenderingOption')!;
+    this.enableExtendedTableSyntax = config.get<boolean>(
+      'enableExtendedTableSyntax',
+    )!;
+    this.enableCriticMarkupSyntax = config.get<boolean>(
+      'enableCriticMarkupSyntax',
+    )!;
+    this.frontMatterRenderingOption = config.get<string>(
+      'frontMatterRenderingOption',
+    )!;
     this.mermaidTheme = config.get<string>('mermaidTheme')!;
-    this.mathRenderingOption = config.get<string>('mathRenderingOption') as MathRenderingOption;
+    this.mathRenderingOption = config.get<string>(
+      'mathRenderingOption',
+    ) as MathRenderingOption;
     this.mathInlineDelimiters = config.get<string[][]>('mathInlineDelimiters')!;
     this.mathBlockDelimiters = config.get<string[][]>('mathBlockDelimiters')!;
-    this.mathRenderingOnlineService = config.get<string>('mathRenderingOnlineService')!;
+    this.mathRenderingOnlineService = config.get<string>(
+      'mathRenderingOnlineService',
+    )!;
     this.codeBlockTheme = config.get<string>('codeBlockTheme')!;
     this.previewTheme = config.get<string>('previewTheme')!;
     this.revealjsTheme = config.get<string>('revealjsTheme')!;
@@ -98,12 +110,24 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     )!;
 
     this.enableHTML5Embed = config.get<boolean>('enableHTML5Embed')!;
-    this.HTML5EmbedUseImageSyntax = config.get<boolean>('HTML5EmbedUseImageSyntax')!;
-    this.HTML5EmbedUseLinkSyntax = config.get<boolean>('HTML5EmbedUseLinkSyntax')!;
-    this.HTML5EmbedIsAllowedHttp = config.get<boolean>('HTML5EmbedIsAllowedHttp')!;
-    this.HTML5EmbedAudioAttributes = config.get<string>('HTML5EmbedAudioAttributes')!;
-    this.HTML5EmbedVideoAttributes = config.get<string>('HTML5EmbedVideoAttributes')!;
-    this.puppeteerWaitForTimeout = config.get<number>('puppeteerWaitForTimeout')!;
+    this.HTML5EmbedUseImageSyntax = config.get<boolean>(
+      'HTML5EmbedUseImageSyntax',
+    )!;
+    this.HTML5EmbedUseLinkSyntax = config.get<boolean>(
+      'HTML5EmbedUseLinkSyntax',
+    )!;
+    this.HTML5EmbedIsAllowedHttp = config.get<boolean>(
+      'HTML5EmbedIsAllowedHttp',
+    )!;
+    this.HTML5EmbedAudioAttributes = config.get<string>(
+      'HTML5EmbedAudioAttributes',
+    )!;
+    this.HTML5EmbedVideoAttributes = config.get<string>(
+      'HTML5EmbedVideoAttributes',
+    )!;
+    this.puppeteerWaitForTimeout = config.get<number>(
+      'puppeteerWaitForTimeout',
+    )!;
     this.usePuppeteerCore = config.get<boolean>('usePuppeteerCore')!;
     this.puppeteerArgs = config.get<string[]>('puppeteerArgs')!;
     this.plantumlServer = config.get<string>('plantumlServer')!;
@@ -115,5 +139,5 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     return json1 === json2;
   }
 
-  [key: string]: any;
+  [key: string]: unknown;
 }

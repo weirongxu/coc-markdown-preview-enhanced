@@ -1,0 +1,3 @@
+{
+  "extends": ["@raidou/eslint-config-base"]
+}

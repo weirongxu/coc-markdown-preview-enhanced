@@ -8,7 +8,9 @@ let webviewExt: Extension<WebviewAPI> | undefined;
 
 export const getWebviewAPI = () => {
   if (!webviewExt) {
-    webviewExt = extensions.all.find((ext) => ext.id === 'coc-webview') as Extension<WebviewAPI> | undefined;
+    webviewExt = extensions.all.find((ext) => ext.id === 'coc-webview') as
+      | Extension<WebviewAPI>
+      | undefined;
   }
   if (!webviewExt) {
     void window.showErrorMessage('Please install the coc-webview extension');
