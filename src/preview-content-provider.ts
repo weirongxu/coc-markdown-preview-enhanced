@@ -364,9 +364,19 @@ export class MarkdownPreviewEnhancedView {
       } else {
         previewPanel = this.singlePreviewPanel;
         this.singlePreviewPanelSourceUriTarget = sourceUri;
+        if (openURL) {
+          previewPanel.reveal({
+            openURL,
+          });
+        }
       }
     } else if (this.previewMaps[sourceUri.fsPath]) {
       previewPanel = this.previewMaps[sourceUri.fsPath];
+      if (openURL) {
+        previewPanel.reveal({
+          openURL,
+        });
+      }
     } else {
       // new preview panel
       const localResourceRoots = [
