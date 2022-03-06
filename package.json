@@ -1,6 +1,6 @@
 {
   "name": "coc-markdown-preview-enhanced",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Markdown Preview Enhanced ported to coc.nvim",
   "author": "Weirong Xu <weirongxu.raidou@gmail.com>",
   "license": "University of Illinois/NCSA",
