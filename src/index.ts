@@ -39,7 +39,7 @@ async function openInVim(uri: Uri, type: 'edit' | 'vsplit') {
     // https://github.com/weirongxu/coc-explorer/issues/113
     nvim.command('redraw', true);
   }
-  await nvim.resumeNotification();
+  await nvim.resumeNotification(true);
 }
 
 // this method is called when your extension iopenTextDocuments activated
