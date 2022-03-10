@@ -4,6 +4,7 @@ import {
   commands,
   events,
   ExtensionContext,
+  LinesTextDocument,
   Position,
   Range,
   TextEdit,
@@ -369,7 +370,7 @@ export function activate(context: ExtensionContext) {
 
   context.subscriptions.push(
     workspace.onDidSaveTextDocument(
-      logger.asyncCatch((document) => {
+      logger.asyncCatch((document: LinesTextDocument) => {
         if (isMarkdownFile(document)) {
           contentProvider.updateMarkdown(Uri.parse(document.uri), true);
         }

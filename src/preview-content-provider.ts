@@ -175,7 +175,10 @@ export class MarkdownPreviewEnhancedView {
     }
 
     const doc = await workspace.document;
-    if (this.formatPathIfNecessary(doc.uri) === filePath) {
+    if (!isMarkdownFile(doc.textDocument)) {
+      return '';
+    }
+    if (this.formatPathIfNecessary(Uri.parse(doc.uri).fsPath) === filePath) {
       let codeChunkOffset = 0;
       const targetCodeChunkOffset =
         codeChunkData.normalizedInfo.attributes['code_chunk_offset'];
