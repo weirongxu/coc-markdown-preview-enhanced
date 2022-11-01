@@ -62,10 +62,10 @@
     eslint-config-prettier "^8.3.0"
     eslint-plugin-prettier "^4.0.0"
 
-"@shd101wyy/mume@^0.7.0":
-  version "0.7.0"
-  resolved "https://registry.yarnpkg.com/@shd101wyy/mume/-/mume-0.7.0.tgz#47298502190793db0cc2fd0f4c81d15651360331"
-  integrity sha512-yWDfumZzp6WAyNRMq2vTRNjlYRyAR9uJBeA28+LsaMphOmAvKZ4NMa2d6CvCGJGb84ge3W7m8I8mjYKGADJcLw==
+"@shd101wyy/mume@^0.7.3":
+  version "0.7.3"
+  resolved "https://registry.yarnpkg.com/@shd101wyy/mume/-/mume-0.7.3.tgz#1bf684f400d9e88b943f1a7ce14314ae770c01c9"
+  integrity sha512-MdkiBTHqS4s1ofdUFisvpeFOghjJCcTIHOrV9+Q9ZEPB6LkYwx6RB28WhJWfiw0qrZVUAOKkOeFMJImPOjzLLA==
   dependencies:
     babyparse "^0.4.6"
     cheerio "1.0.0-rc.3"
