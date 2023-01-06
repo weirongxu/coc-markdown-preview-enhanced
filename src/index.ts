@@ -1,5 +1,5 @@
 import { getExtensionConfigPath, utility } from '@shd101wyy/mume';
-import {} from 'coc-helper';
+import { isBinaryFile } from 'isbinaryfile';
 import {
   commands,
   events,
@@ -13,7 +13,6 @@ import {
   workspace,
 } from 'coc.nvim';
 import path from 'path';
-import { URL } from 'url';
 import { pasteImageFile, uploadImageFile } from './image-helper';
 import {
   getPreviewUri,
@@ -59,10 +58,10 @@ export function activate(context: ExtensionContext) {
     await contentProvider.initPreview(resource, doc, openURL);
   }
 
-  function toggleScrollSync() {
+  async function toggleScrollSync() {
     const config = workspace.getConfiguration('markdown-preview-enhanced');
     const scrollSync = !config.get<boolean>('scrollSync');
-    config.update('scrollSync', scrollSync, true);
+    await config.update('scrollSync', scrollSync, true);
     contentProvider.updateConfiguration();
     if (scrollSync) {
       void window.showInformationMessage('Scroll Sync is enabled');
@@ -71,10 +70,10 @@ export function activate(context: ExtensionContext) {
     }
   }
 
-  function toggleLiveUpdate() {
+  async function toggleLiveUpdate() {
     const config = workspace.getConfiguration('markdown-preview-enhanced');
     const liveUpdate = !config.get<boolean>('liveUpdate');
-    config.update('liveUpdate', liveUpdate, true);
+    await config.update('liveUpdate', liveUpdate, true);
     contentProvider.updateConfiguration();
     if (liveUpdate) {
       void window.showInformationMessage('Live Update is enabled');
@@ -83,10 +82,10 @@ export function activate(context: ExtensionContext) {
     }
   }
 
-  function toggleBreakOnSingleNewLine() {
+  async function toggleBreakOnSingleNewLine() {
     const config = workspace.getConfiguration('markdown-preview-enhanced');
     const breakOnSingleNewLine = !config.get<boolean>('breakOnSingleNewLine');
-    config.update('breakOnSingleNewLine', breakOnSingleNewLine, true);
+    await config.update('breakOnSingleNewLine', breakOnSingleNewLine, true);
     contentProvider.updateConfiguration();
     if (breakOnSingleNewLine) {
       void window.showInformationMessage('Break On Single New Line is enabled');
@@ -319,24 +318,22 @@ export function activate(context: ExtensionContext) {
     });
   }
 
-  async function clickTagA(uri: string, href: string) {
+  async function clickTagA(sourceUri: string, href: string) {
     const util = getWebviewAPI().util;
     const curDoc = await workspace.document;
     href = decodeURIComponent(href);
     if (!href) {
       return;
     }
-    if (
-      ['.pdf', '.xls', '.xlsx', '.doc', '.ppt', '.docx', '.pptx'].indexOf(
-        path.extname(uri),
-      ) >= 0
-    ) {
-      util.openUri(href);
-    } else {
-      const url = new URL(href);
-      const openType = curDoc.uri === uri ? 'edit' : 'vsplit';
-      await openInVim(Uri.parse(url.pathname), openType);
+    const resourceUri = util.parseResourceUri(href);
+    if (resourceUri?.localPath) {
+      const openType = curDoc.uri === sourceUri ? 'edit' : 'vsplit';
+      const hrefUri = Uri.parse(resourceUri.localPath);
+      if (!(await isBinaryFile(hrefUri.fsPath)))
+        await openInVim(hrefUri, openType);
+      return;
     }
+    util.openExternalUri(href);
   }
 
   async function clickTaskListCheckbox(uri: string, dataLine: string) {
@@ -363,9 +360,9 @@ export function activate(context: ExtensionContext) {
     ]);
   }
 
-  function setPreviewTheme(_uri: string, theme: string) {
+  async function setPreviewTheme(_uri: string, theme: string) {
     const config = workspace.getConfiguration('markdown-preview-enhanced');
-    config.update('previewTheme', theme, true);
+    await config.update('previewTheme', theme, true);
   }
 
   context.subscriptions.push(
@@ -467,17 +464,17 @@ export function activate(context: ExtensionContext) {
   }))
   */
 
-  const registerCommand = (cmd: string, impl: (...args: unknown[]) => void) =>
-    commands.registerCommand(cmd, logger.asyncCatch(impl));
+  const registerCommand = (
+    cmd: string,
+    impl: (...args: any[]) => void | Promise<void>,
+  ) => commands.registerCommand(cmd, logger.asyncCatch(impl));
 
   context.subscriptions.push(
-    registerCommand(
-      'markdown-preview-enhanced.openPreview',
-      logger.asyncCatch(() => openPreview(true)),
+    registerCommand('markdown-preview-enhanced.openPreview', () =>
+      openPreview(true),
     ),
-    registerCommand(
-      'markdown-preview-enhanced.openPreviewBackground',
-      logger.asyncCatch(() => openPreview(false)),
+    registerCommand('markdown-preview-enhanced.openPreviewBackground', () =>
+      openPreview(false),
     ),
     registerCommand(
       'markdown-preview-enhanced.toggleScrollSync',
@@ -493,102 +490,63 @@ export function activate(context: ExtensionContext) {
     ),
     registerCommand(
       'markdown-preview-enhanced.openImageHelper',
-      logger.asyncCatch(openImageHelper),
+      openImageHelper,
     ),
     registerCommand(
       'markdown-preview-enhanced.runAllCodeChunks',
-      logger.asyncCatch(runAllCodeChunksCommand),
+      runAllCodeChunksCommand,
     ),
     registerCommand(
       'markdown-preview-enhanced.runCodeChunk',
-      logger.asyncCatch(runCodeChunkCommand),
+      runCodeChunkCommand,
     ),
-    registerCommand(
-      'markdown-preview-enhanced.syncPreview',
-      logger.asyncCatch(syncPreview),
-    ),
-    registerCommand(
-      'markdown-preview-enhanced.customizeCss',
-      logger.asyncCatch(customizeCSS),
-    ),
+    registerCommand('markdown-preview-enhanced.syncPreview', syncPreview),
+    registerCommand('markdown-preview-enhanced.customizeCss', customizeCSS),
     registerCommand(
       'markdown-preview-enhanced.openMermaidConfig',
-      logger.asyncCatch(openMermaidConfig),
+      openMermaidConfig,
     ),
     registerCommand(
       'markdown-preview-enhanced.openMathJaxConfig',
-      logger.asyncCatch(openMathJaxConfig),
+      openMathJaxConfig,
     ),
     registerCommand(
       'markdown-preview-enhanced.openKaTeXConfig',
-      logger.asyncCatch(openKaTeXConfig),
+      openKaTeXConfig,
     ),
-    registerCommand(
-      'markdown-preview-enhanced.extendParser',
-      logger.asyncCatch(extendParser),
-    ),
+    registerCommand('markdown-preview-enhanced.extendParser', extendParser),
     registerCommand(
       'markdown-preview-enhanced.showUploadedImages',
-      logger.asyncCatch(showUploadedImages),
+      showUploadedImages,
     ),
-    registerCommand(
-      'markdown-preview-enhanced.insertNewSlide',
-      logger.asyncCatch(insertNewSlide),
-    ),
-    registerCommand(
-      'markdown-preview-enhanced.insertTable',
-      logger.asyncCatch(insertTable),
-    ),
+    registerCommand('markdown-preview-enhanced.insertNewSlide', insertNewSlide),
+    registerCommand('markdown-preview-enhanced.insertTable', insertTable),
     registerCommand(
       'markdown-preview-enhanced.insertPagebreak',
-      logger.asyncCatch(insertPagebreak),
+      insertPagebreak,
     ),
-    registerCommand(
-      'markdown-preview-enhanced.createTOC',
-      logger.asyncCatch(createTOC),
-    ),
-    registerCommand('_mume.revealLine', logger.asyncCatch(revealLine)),
-    registerCommand('_mume.insertImageUrl', logger.asyncCatch(insertImageUrl)),
-    registerCommand('_mume.pasteImageFile', logger.asyncCatch(pasteImageFile)),
-    registerCommand(
-      '_mume.uploadImageFile',
-      logger.asyncCatch(uploadImageFile),
-    ),
-    registerCommand('_mume.refreshPreview', logger.asyncCatch(refreshPreview)),
-    registerCommand('_mume.openInBrowser', logger.asyncCatch(openInBrowser)),
-    registerCommand('_mume.htmlExport', logger.asyncCatch(htmlExport)),
-    registerCommand('_mume.chromeExport', logger.asyncCatch(chromeExport)),
-    registerCommand('_mume.princeExport', logger.asyncCatch(princeExport)),
-    registerCommand('_mume.eBookExport', logger.asyncCatch(eBookExport)),
-    registerCommand('_mume.pandocExport', logger.asyncCatch(pandocExport)),
-    registerCommand('_mume.markdownExport', logger.asyncCatch(markdownExport)),
-    registerCommand(
-      '_mume.webviewFinishLoading',
-      logger.asyncCatch(webviewFinishLoading),
-    ),
+    registerCommand('markdown-preview-enhanced.createTOC', createTOC),
+    registerCommand('_mume.revealLine', revealLine),
+    registerCommand('_mume.insertImageUrl', insertImageUrl),
+    registerCommand('_mume.pasteImageFile', pasteImageFile),
+    registerCommand('_mume.uploadImageFile', uploadImageFile),
+    registerCommand('_mume.refreshPreview', refreshPreview),
+    registerCommand('_mume.openInBrowser', openInBrowser),
+    registerCommand('_mume.htmlExport', htmlExport),
+    registerCommand('_mume.chromeExport', chromeExport),
+    registerCommand('_mume.princeExport', princeExport),
+    registerCommand('_mume.eBookExport', eBookExport),
+    registerCommand('_mume.pandocExport', pandocExport),
+    registerCommand('_mume.markdownExport', markdownExport),
+    registerCommand('_mume.webviewFinishLoading', webviewFinishLoading),
     // registerCommand('_mume.cacheSVG', cacheSVG),
-    registerCommand(
-      '_mume.cacheCodeChunkResult',
-      logger.asyncCatch(cacheCodeChunkResult),
-    ),
-    registerCommand('_mume.runCodeChunk', logger.asyncCatch(runCodeChunk)),
-    registerCommand(
-      '_mume.runAllCodeChunks',
-      logger.asyncCatch(runAllCodeChunks),
-    ),
-    registerCommand('_mume.clickTagA', logger.asyncCatch(clickTagA)),
-    registerCommand(
-      '_mume.clickTaskListCheckbox',
-      logger.asyncCatch(clickTaskListCheckbox),
-    ),
-    registerCommand(
-      '_mume.showUploadedImageHistory',
-      logger.asyncCatch(showUploadedImages),
-    ),
-    registerCommand(
-      '_mume.setPreviewTheme',
-      logger.asyncCatch(setPreviewTheme),
-    ),
+    registerCommand('_mume.cacheCodeChunkResult', cacheCodeChunkResult),
+    registerCommand('_mume.runCodeChunk', runCodeChunk),
+    registerCommand('_mume.runAllCodeChunks', runAllCodeChunks),
+    registerCommand('_mume.clickTagA', clickTagA),
+    registerCommand('_mume.clickTaskListCheckbox', clickTaskListCheckbox),
+    registerCommand('_mume.showUploadedImageHistory', showUploadedImages),
+    registerCommand('_mume.setPreviewTheme', setPreviewTheme),
   );
 }
 

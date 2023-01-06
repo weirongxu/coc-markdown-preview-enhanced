@@ -1,4 +1,6 @@
+/* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/no-var-requires */
+
 async function start(watch) {
   await require('esbuild').build({
     entryPoints: {

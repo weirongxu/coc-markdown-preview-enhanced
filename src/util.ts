@@ -13,8 +13,9 @@ export const getWebviewAPI = () => {
       | undefined;
   }
   if (!webviewExt) {
-    void window.showErrorMessage('Please install the coc-webview extension');
-    throw new Error('Please install the coc-webview extension');
+    const prompt = 'Please install the coc-webview extension';
+    void window.showErrorMessage(prompt);
+    throw new Error(prompt);
   }
   return webviewExt.exports;
 };
