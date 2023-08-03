@@ -291,23 +291,23 @@ export class MarkdownPreviewEnhancedView {
     sourceUri: Uri,
     workspaceFolders: readonly WorkspaceFolder[] = [],
   ) {
-    const possibleWorkspaceFolders = workspaceFolders.filter(
-      (workspaceFolder) => {
+    const possibleWorkspaceFolders = workspaceFolders
+      .map((workspaceFolder) => Uri.parse(workspaceFolder.uri).fsPath)
+      .filter((workspaceFolder) => {
         return (
           path
             .dirname(sourceUri.path.toUpperCase())
-            .indexOf(workspaceFolder.uri.toUpperCase()) >= 0
+            .indexOf(workspaceFolder.toUpperCase()) >= 0
         )
-      },
-    )
+      })
 
     let projectDirectoryPath: string
     if (possibleWorkspaceFolders.length) {
       // We pick the workspaceUri that has the longest path
       const workspaceFolder = possibleWorkspaceFolders.sort(
-        (x, y) => y.uri.length - x.uri.length,
+        (x, y) => y.length - x.length,
       )[0]
-      projectDirectoryPath = workspaceFolder.uri
+      projectDirectoryPath = workspaceFolder
     } else {
       projectDirectoryPath = ''
     }
@@ -361,6 +361,10 @@ export class MarkdownPreviewEnhancedView {
       const newResourceRoot =
         this.getProjectDirectoryPath(sourceUri, workspace.workspaceFolders) ||
         path.dirname(sourceUri.fsPath)
+      logger.info(sourceUri.path)
+      logger.info(workspace.workspaceFolders[0].uri)
+      logger.info(oldResourceRoot)
+      logger.info(newResourceRoot)
       if (oldResourceRoot !== newResourceRoot) {
         this.singlePreviewPanel.dispose()
         return this.initPreview(sourceUri, doc, openURL)
