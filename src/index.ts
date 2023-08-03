@@ -1,5 +1,5 @@
-import { getExtensionConfigPath, utility } from '@shd101wyy/mume';
-import { isBinaryFile } from 'isbinaryfile';
+import { getExtensionConfigPath, utility } from '@shd101wyy/mume'
+import { isBinaryFile } from 'isbinaryfile'
 import {
   commands,
   events,
@@ -11,165 +11,163 @@ import {
   Uri,
   window,
   workspace,
-} from 'coc.nvim';
-import path from 'path';
-import { pasteImageFile, uploadImageFile } from './image-helper';
+} from 'coc.nvim'
+import path from 'path'
+import { pasteImageFile, uploadImageFile } from './image-helper'
 import {
   getPreviewUri,
   isMarkdownFile,
   MarkdownPreviewEnhancedView,
-} from './preview-content-provider';
-import { getWebviewAPI, logger } from './util';
+} from './preview-content-provider'
+import { getWebviewAPI, logger } from './util'
 
-let editorScrollDelay = Date.now();
+let editorScrollDelay = Date.now()
 
 async function openInVim(uri: Uri, type: 'edit' | 'vsplit') {
-  const nvim = workspace.nvim;
+  const nvim = workspace.nvim
   const escapedPath: string = await workspace.nvim.call('fnameescape', [
     uri.fsPath,
-  ]);
-  nvim.pauseNotification();
+  ])
+  nvim.pauseNotification()
   if (type === 'vsplit') {
-    nvim.command(`vsplit ${escapedPath}`, true);
+    nvim.command(`vsplit ${escapedPath}`, true)
   } else {
-    nvim.command(`edit ${escapedPath}`, true);
+    nvim.command(`edit ${escapedPath}`, true)
   }
   if (workspace.isVim) {
     // Avoid vim highlight not working,
     // https://github.com/weirongxu/coc-explorer/issues/113
-    nvim.command('redraw', true);
+    nvim.command('redraw', true)
   }
-  await nvim.resumeNotification(true);
+  await nvim.resumeNotification(true)
 }
 
 // this method is called when your extension iopenTextDocuments activated
 // your extension is activated the very first time the command is executed
 export function activate(context: ExtensionContext) {
   // assume only one preview supported.
-  const contentProvider = new MarkdownPreviewEnhancedView(context);
+  const contentProvider = new MarkdownPreviewEnhancedView(context)
 
   async function openPreview(openURL: boolean, uri?: Uri) {
-    const doc = await workspace.document;
-    let resource = uri;
+    const doc = await workspace.document
+    let resource = uri
     if (!(resource instanceof Uri)) {
       // we are relaxed and don't check for markdown files
-      resource = Uri.parse(doc.uri);
+      resource = Uri.parse(doc.uri)
     }
-    await contentProvider.initPreview(resource, doc, openURL);
+    await contentProvider.initPreview(resource, doc, openURL)
   }
 
   async function toggleScrollSync() {
-    const config = workspace.getConfiguration('markdown-preview-enhanced');
-    const scrollSync = !config.get<boolean>('scrollSync');
-    await config.update('scrollSync', scrollSync, true);
-    contentProvider.updateConfiguration();
+    const config = workspace.getConfiguration('markdown-preview-enhanced')
+    const scrollSync = !config.get<boolean>('scrollSync')
+    await config.update('scrollSync', scrollSync, true)
+    contentProvider.updateConfiguration()
     if (scrollSync) {
-      void window.showInformationMessage('Scroll Sync is enabled');
+      void window.showInformationMessage('Scroll Sync is enabled')
     } else {
-      void window.showInformationMessage('Scroll Sync is disabled');
+      void window.showInformationMessage('Scroll Sync is disabled')
     }
   }
 
   async function toggleLiveUpdate() {
-    const config = workspace.getConfiguration('markdown-preview-enhanced');
-    const liveUpdate = !config.get<boolean>('liveUpdate');
-    await config.update('liveUpdate', liveUpdate, true);
-    contentProvider.updateConfiguration();
+    const config = workspace.getConfiguration('markdown-preview-enhanced')
+    const liveUpdate = !config.get<boolean>('liveUpdate')
+    await config.update('liveUpdate', liveUpdate, true)
+    contentProvider.updateConfiguration()
     if (liveUpdate) {
-      void window.showInformationMessage('Live Update is enabled');
+      void window.showInformationMessage('Live Update is enabled')
     } else {
-      void window.showInformationMessage('Live Update is disabled');
+      void window.showInformationMessage('Live Update is disabled')
     }
   }
 
   async function toggleBreakOnSingleNewLine() {
-    const config = workspace.getConfiguration('markdown-preview-enhanced');
-    const breakOnSingleNewLine = !config.get<boolean>('breakOnSingleNewLine');
-    await config.update('breakOnSingleNewLine', breakOnSingleNewLine, true);
-    contentProvider.updateConfiguration();
+    const config = workspace.getConfiguration('markdown-preview-enhanced')
+    const breakOnSingleNewLine = !config.get<boolean>('breakOnSingleNewLine')
+    await config.update('breakOnSingleNewLine', breakOnSingleNewLine, true)
+    contentProvider.updateConfiguration()
     if (breakOnSingleNewLine) {
-      void window.showInformationMessage('Break On Single New Line is enabled');
+      void window.showInformationMessage('Break On Single New Line is enabled')
     } else {
-      void window.showInformationMessage(
-        'Break On Single New Line is disabled',
-      );
+      void window.showInformationMessage('Break On Single New Line is disabled')
     }
   }
 
   async function customizeCSS() {
     const globalStyleLessFile = utility.addFileProtocol(
       path.resolve(getExtensionConfigPath(), './style.less'),
-    );
-    await openInVim(Uri.parse(globalStyleLessFile), 'vsplit');
+    )
+    await openInVim(Uri.parse(globalStyleLessFile), 'vsplit')
   }
 
   async function openMermaidConfig() {
     const mermaidConfigFilePath = utility.addFileProtocol(
       path.resolve(getExtensionConfigPath(), './mermaid_config.js'),
-    );
-    await openInVim(Uri.parse(mermaidConfigFilePath), 'vsplit');
+    )
+    await openInVim(Uri.parse(mermaidConfigFilePath), 'vsplit')
   }
 
   async function openMathJaxConfig() {
     const mathjaxConfigFilePath = utility.addFileProtocol(
       path.resolve(getExtensionConfigPath(), './mathjax_config.js'),
-    );
-    await openInVim(Uri.parse(mathjaxConfigFilePath), 'vsplit');
+    )
+    await openInVim(Uri.parse(mathjaxConfigFilePath), 'vsplit')
   }
 
   async function openKaTeXConfig() {
     const katexConfigFilePath = utility.addFileProtocol(
       path.resolve(getExtensionConfigPath(), './katex_config.js'),
-    );
-    await openInVim(Uri.parse(katexConfigFilePath), 'vsplit');
+    )
+    await openInVim(Uri.parse(katexConfigFilePath), 'vsplit')
   }
 
   async function extendParser() {
     const parserConfigPath = utility.addFileProtocol(
       path.resolve(getExtensionConfigPath(), './parser.js'),
-    );
-    await openInVim(Uri.parse(parserConfigPath), 'vsplit');
+    )
+    await openInVim(Uri.parse(parserConfigPath), 'vsplit')
   }
 
   async function showUploadedImages() {
     const imageHistoryFilePath = utility.addFileProtocol(
       path.resolve(getExtensionConfigPath(), './image_history.md'),
-    );
-    await openInVim(Uri.parse(imageHistoryFilePath), 'vsplit');
+    )
+    await openInVim(Uri.parse(imageHistoryFilePath), 'vsplit')
   }
 
   async function cursorPosition() {
-    const win = await workspace.nvim.window;
-    const cursor = await win.cursor;
-    return Position.create(cursor[0], cursor[1]);
+    const win = await workspace.nvim.window
+    const cursor = await win.cursor
+    return Position.create(cursor[0], cursor[1])
   }
 
   async function insertNewSlide() {
-    const doc = await workspace.document;
+    const doc = await workspace.document
     await doc.applyEdits([
       TextEdit.insert(await cursorPosition(), '<!-- slide -->\n'),
-    ]);
+    ])
   }
 
   async function insertPagebreak() {
-    const doc = await workspace.document;
+    const doc = await workspace.document
     await doc.applyEdits([
       TextEdit.insert(await cursorPosition(), '<!-- pagebreak -->\n'),
-    ]);
+    ])
   }
 
   async function createTOC() {
-    const doc = await workspace.document;
+    const doc = await workspace.document
     await doc.applyEdits([
       TextEdit.insert(
         await cursorPosition(),
         '\n<!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->\n',
       ),
-    ]);
+    ])
   }
 
   async function insertTable() {
-    const doc = await workspace.document;
+    const doc = await workspace.document
     await doc.applyEdits([
       TextEdit.insert(
         await cursorPosition(),
@@ -178,18 +176,18 @@ export function activate(context: ExtensionContext) {
 |   |   |
 `,
       ),
-    ]);
+    ])
   }
 
   async function openImageHelper() {
     await contentProvider.openImageHelper(
       Uri.parse((await workspace.document).uri),
-    );
+    )
   }
 
   function webviewFinishLoading(uri: string) {
-    const sourceUri = Uri.parse(uri);
-    contentProvider.updateMarkdown(sourceUri);
+    const sourceUri = Uri.parse(uri)
+    contentProvider.updateMarkdown(sourceUri)
   }
 
   /**
@@ -198,55 +196,55 @@ export function activate(context: ExtensionContext) {
    * @param imageUrl: url of image to be inserted
    */
   async function insertImageUrl(uri: string, imageUrl: string) {
-    const doc = workspace.getDocument(uri);
+    const doc = workspace.getDocument(uri)
     if (doc && isMarkdownFile(doc.textDocument)) {
       await doc.applyEdits([
         TextEdit.insert(
           await cursorPosition(),
           `![enter image description here](${imageUrl})`,
         ),
-      ]);
+      ])
     }
   }
 
   function refreshPreview(uri: string) {
-    const sourceUri = Uri.parse(uri);
-    contentProvider.refreshPreview(sourceUri);
+    const sourceUri = Uri.parse(uri)
+    contentProvider.refreshPreview(sourceUri)
   }
 
   function openInBrowser(uri: string) {
-    const sourceUri = Uri.parse(uri);
-    contentProvider.openInBrowser(sourceUri);
+    const sourceUri = Uri.parse(uri)
+    contentProvider.openInBrowser(sourceUri)
   }
 
   function htmlExport(uri: string, offline: boolean) {
-    const sourceUri = Uri.parse(uri);
-    contentProvider.htmlExport(sourceUri, offline);
+    const sourceUri = Uri.parse(uri)
+    contentProvider.htmlExport(sourceUri, offline)
   }
 
   function chromeExport(uri: string, type: string) {
-    const sourceUri = Uri.parse(uri);
-    contentProvider.chromeExport(sourceUri, type);
+    const sourceUri = Uri.parse(uri)
+    contentProvider.chromeExport(sourceUri, type)
   }
 
   function princeExport(uri: string) {
-    const sourceUri = Uri.parse(uri);
-    contentProvider.princeExport(sourceUri);
+    const sourceUri = Uri.parse(uri)
+    contentProvider.princeExport(sourceUri)
   }
 
   function eBookExport(uri: string, fileType: string) {
-    const sourceUri = Uri.parse(uri);
-    contentProvider.eBookExport(sourceUri, fileType);
+    const sourceUri = Uri.parse(uri)
+    contentProvider.eBookExport(sourceUri, fileType)
   }
 
   function pandocExport(uri: string) {
-    const sourceUri = Uri.parse(uri);
-    contentProvider.pandocExport(sourceUri);
+    const sourceUri = Uri.parse(uri)
+    contentProvider.pandocExport(sourceUri)
   }
 
   function markdownExport(uri: string) {
-    const sourceUri = Uri.parse(uri);
-    contentProvider.markdownExport(sourceUri);
+    const sourceUri = Uri.parse(uri)
+    contentProvider.markdownExport(sourceUri)
   }
 
   /*
@@ -257,97 +255,97 @@ export function activate(context: ExtensionContext) {
 	*/
 
   function cacheCodeChunkResult(uri: string, id: string, result: string) {
-    const sourceUri = Uri.parse(uri);
-    contentProvider.cacheCodeChunkResult(sourceUri, id, result);
+    const sourceUri = Uri.parse(uri)
+    contentProvider.cacheCodeChunkResult(sourceUri, id, result)
   }
 
   function runCodeChunk(uri: string, codeChunkId: string) {
-    const sourceUri = Uri.parse(uri);
-    contentProvider.runCodeChunk(sourceUri, codeChunkId);
+    const sourceUri = Uri.parse(uri)
+    contentProvider.runCodeChunk(sourceUri, codeChunkId)
   }
 
   function runAllCodeChunks(uri: string) {
-    const sourceUri = Uri.parse(uri);
-    contentProvider.runAllCodeChunks(sourceUri);
+    const sourceUri = Uri.parse(uri)
+    contentProvider.runAllCodeChunks(sourceUri)
   }
 
   async function runAllCodeChunksCommand() {
-    const doc = await workspace.document;
+    const doc = await workspace.document
     if (!isMarkdownFile(doc.textDocument)) {
-      return;
+      return
     }
 
-    const sourceUri = Uri.parse(doc.uri);
-    const previewUri = getPreviewUri(sourceUri);
+    const sourceUri = Uri.parse(doc.uri)
+    const previewUri = getPreviewUri(sourceUri)
     if (!previewUri) {
-      return;
+      return
     }
 
     contentProvider.previewPostMessage(sourceUri, {
       command: 'runAllCodeChunks',
-    });
+    })
   }
 
   async function runCodeChunkCommand() {
-    const doc = await workspace.document;
+    const doc = await workspace.document
     if (!isMarkdownFile(doc.textDocument)) {
-      return;
+      return
     }
 
-    const sourceUri = Uri.parse(doc.uri);
-    const previewUri = getPreviewUri(sourceUri);
+    const sourceUri = Uri.parse(doc.uri)
+    const previewUri = getPreviewUri(sourceUri)
     if (!previewUri) {
-      return;
+      return
     }
     contentProvider.previewPostMessage(sourceUri, {
       command: 'runCodeChunk',
-    });
+    })
   }
 
   async function syncPreview() {
-    const doc = await workspace.document;
+    const doc = await workspace.document
     if (!isMarkdownFile(doc.textDocument)) {
-      return;
+      return
     }
 
-    const sourceUri = Uri.parse(doc.uri);
+    const sourceUri = Uri.parse(doc.uri)
     contentProvider.previewPostMessage(sourceUri, {
       command: 'changeTextEditorSelection',
       line: (await cursorPosition()).line,
       forced: true,
-    });
+    })
   }
 
   async function clickTagA(sourceUri: string, href: string) {
-    const util = getWebviewAPI().util;
-    const curDoc = await workspace.document;
-    href = decodeURIComponent(href);
+    const util = getWebviewAPI().util
+    const curDoc = await workspace.document
+    href = decodeURIComponent(href)
     if (!href) {
-      return;
+      return
     }
-    const resourceUri = util.parseResourceUri(href);
+    const resourceUri = util.parseResourceUri(href)
     if (resourceUri?.localPath) {
-      const openType = curDoc.uri === sourceUri ? 'edit' : 'vsplit';
-      const hrefUri = Uri.parse(resourceUri.localPath);
+      const openType = curDoc.uri === sourceUri ? 'edit' : 'vsplit'
+      const hrefUri = Uri.parse(resourceUri.localPath)
       if (!(await isBinaryFile(hrefUri.fsPath)))
-        await openInVim(hrefUri, openType);
-      return;
+        await openInVim(hrefUri, openType)
+      return
     }
-    util.openExternalUri(href);
+    util.openExternalUri(href)
   }
 
   async function clickTaskListCheckbox(uri: string, dataLine: string) {
-    const doc = workspace.getDocument(uri);
+    const doc = workspace.getDocument(uri)
     if (!doc || !isMarkdownFile(doc.textDocument)) {
-      return;
+      return
     }
 
-    const dataLineNum = parseInt(dataLine, 10);
-    let line = doc.getline(dataLineNum);
+    const dataLineNum = parseInt(dataLine, 10)
+    let line = doc.getline(dataLineNum)
     if (line.match(/\[ \]/)) {
-      line = line.replace('[ ]', '[x]');
+      line = line.replace('[ ]', '[x]')
     } else {
-      line = line.replace(/\[[xX]\]/, '[ ]');
+      line = line.replace(/\[[xX]\]/, '[ ]')
     }
     await doc.applyEdits([
       TextEdit.replace(
@@ -357,55 +355,55 @@ export function activate(context: ExtensionContext) {
         ),
         line,
       ),
-    ]);
+    ])
   }
 
   async function setPreviewTheme(_uri: string, theme: string) {
-    const config = workspace.getConfiguration('markdown-preview-enhanced');
-    await config.update('previewTheme', theme, true);
+    const config = workspace.getConfiguration('markdown-preview-enhanced')
+    await config.update('previewTheme', theme, true)
   }
 
   context.subscriptions.push(
     workspace.onDidSaveTextDocument(
       logger.asyncCatch((document: LinesTextDocument) => {
         if (isMarkdownFile(document)) {
-          contentProvider.updateMarkdown(Uri.parse(document.uri), true);
+          contentProvider.updateMarkdown(Uri.parse(document.uri), true)
         }
       }),
     ),
     workspace.onDidChangeTextDocument(
       logger.asyncCatch((event) => {
-        const doc = workspace.getDocument(event.textDocument.uri);
+        const doc = workspace.getDocument(event.textDocument.uri)
         if (doc && isMarkdownFile(doc.textDocument)) {
-          contentProvider.update(Uri.parse(doc.uri));
+          contentProvider.update(Uri.parse(doc.uri))
         }
       }),
     ),
     workspace.onDidChangeConfiguration(
       logger.asyncCatch(() => {
-        contentProvider.updateConfiguration();
+        contentProvider.updateConfiguration()
       }),
     ),
     events.on(
       'CursorMoved',
       logger.asyncCatch(async (bufnr) => {
-        const doc = workspace.getDocument(bufnr);
+        const doc = workspace.getDocument(bufnr)
         if (doc && isMarkdownFile(doc.textDocument)) {
           if (Date.now() < editorScrollDelay) {
-            return;
+            return
           }
-          const sourceUri = Uri.parse(doc.uri);
-          const win = await workspace.nvim.window;
-          const height = await win.height;
+          const sourceUri = Uri.parse(doc.uri)
+          const win = await workspace.nvim.window
+          const height = await win.height
           if (!height) {
-            return undefined;
+            return undefined
           }
 
-          const [line] = await win.cursor;
+          const [line] = await win.cursor
           contentProvider.previewPostMessage(sourceUri, {
             command: 'changeTextEditorSelection',
             line,
-          });
+          })
         }
       }),
     ),
@@ -416,17 +414,13 @@ export function activate(context: ExtensionContext) {
     events.on(
       'BufEnter',
       logger.asyncCatch(async () => {
-        const doc = await workspace.document;
+        const doc = await workspace.document
         if (isMarkdownFile(doc.textDocument)) {
-          const sourceUri = Uri.parse(doc.uri);
-          const config = workspace.getConfiguration(
-            'markdown-preview-enhanced',
-          );
+          const sourceUri = Uri.parse(doc.uri)
+          const config = workspace.getConfiguration('markdown-preview-enhanced')
           const automaticallyShowPreviewOfMarkdownBeingEdited =
-            config.get<boolean>(
-              'automaticallyShowPreviewOfMarkdownBeingEdited',
-            );
-          const isUsingSinglePreview = config.get<boolean>('singlePreview');
+            config.get<boolean>('automaticallyShowPreviewOfMarkdownBeingEdited')
+          const isUsingSinglePreview = config.get<boolean>('singlePreview')
 
           /**
            * Is using single preview and the preview is on.
@@ -437,20 +431,20 @@ export function activate(context: ExtensionContext) {
               isUsingSinglePreview &&
               !contentProvider.previewHasTheSameSingleSourceUri(sourceUri)
             ) {
-              await contentProvider.initPreview(sourceUri, doc, false);
+              await contentProvider.initPreview(sourceUri, doc, false)
             } else if (!isUsingSinglePreview) {
-              const previewPanel = contentProvider.getPreview(sourceUri);
+              const previewPanel = contentProvider.getPreview(sourceUri)
               if (previewPanel) {
-                previewPanel.reveal({ openURL: false });
+                previewPanel.reveal({ openURL: false })
               }
             }
           } else if (automaticallyShowPreviewOfMarkdownBeingEdited) {
-            await openPreview(true, sourceUri);
+            await openPreview(true, sourceUri)
           }
         }
       }),
     ),
-  );
+  )
 
   /*
   context.subscriptions.push(workspace.onDidOpenTextDocument((textDocument)=> {
@@ -467,7 +461,7 @@ export function activate(context: ExtensionContext) {
   const registerCommand = (
     cmd: string,
     impl: (...args: any[]) => void | Promise<void>,
-  ) => commands.registerCommand(cmd, logger.asyncCatch(impl));
+  ) => commands.registerCommand(cmd, logger.asyncCatch(impl))
 
   context.subscriptions.push(
     registerCommand('markdown-preview-enhanced.openPreview', () =>
@@ -547,28 +541,28 @@ export function activate(context: ExtensionContext) {
     registerCommand('_mume.clickTaskListCheckbox', clickTaskListCheckbox),
     registerCommand('_mume.showUploadedImageHistory', showUploadedImages),
     registerCommand('_mume.setPreviewTheme', setPreviewTheme),
-  );
+  )
 }
 
 async function revealLine(uri: string, line: number) {
-  const doc = workspace.getDocument(uri);
+  const doc = workspace.getDocument(uri)
   if (doc && isMarkdownFile(doc.textDocument)) {
-    const mode = await workspace.nvim.mode;
+    const mode = await workspace.nvim.mode
     if (mode.mode !== 'n') {
-      return;
+      return
     }
-    const sourceLine = Math.min(Math.floor(line), doc.lineCount - 1);
-    const fraction = line - sourceLine;
-    const text = doc.getline(sourceLine);
-    const start = Math.floor(fraction * text.length);
-    const winnr = await workspace.nvim.call('bufwinnr', [doc.bufnr]);
-    if (winnr === -1) return;
-    const winid = await workspace.nvim.call('win_getid', [winnr]);
-    const win = workspace.nvim.createWindow(winid);
-    if (!(await win.valid)) return;
-    editorScrollDelay = Date.now() + 500;
-    await win.setCursor([sourceLine + 1, start]);
-    editorScrollDelay = Date.now() + 500;
+    const sourceLine = Math.min(Math.floor(line), doc.lineCount - 1)
+    const fraction = line - sourceLine
+    const text = doc.getline(sourceLine)
+    const start = Math.floor(fraction * text.length)
+    const winnr = await workspace.nvim.call('bufwinnr', [doc.bufnr])
+    if (winnr === -1) return
+    const winid = await workspace.nvim.call('win_getid', [winnr])
+    const win = workspace.nvim.createWindow(winid)
+    if (!(await win.valid)) return
+    editorScrollDelay = Date.now() + 500
+    await win.setCursor([sourceLine + 1, start])
+    editorScrollDelay = Date.now() + 500
   }
 }
 

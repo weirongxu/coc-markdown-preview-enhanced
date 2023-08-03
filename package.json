@@ -30,29 +30,29 @@
     "singleQuote": true,
     "trailingComma": "all",
     "printWidth": 80,
-    "semi": true
+    "semi": false
   },
   "devDependencies": {
-    "@raidou/eslint-config-base": "^1.6.0",
-    "@types/eslint": "^8.4.9",
-    "@types/node": "^18.11.8",
-    "@types/prettier": "^2.7.1",
-    "@types/rimraf": "^3.0.2",
-    "@types/uuid": "^8.3.4",
-    "coc-helper": "^0.15.2",
+    "@raidou/eslint-config-base": "^2.0.2",
+    "@types/eslint": "^8.44.1",
+    "@types/node": "^20.4.6",
+    "@types/prettier": "^3.0.0",
+    "@types/rimraf": "^4.0.5",
+    "@types/uuid": "^9.0.2",
+    "coc-helper": "^0.16.3",
     "coc-webview": "^0.12.0",
     "coc.nvim": "^0.0.83-next.9",
-    "esbuild": "^0.16.14",
+    "esbuild": "^0.18.17",
     "esbuild-plugin-alias": "^0.2.1",
-    "eslint": "^8.26.0",
+    "eslint": "^8.46.0",
     "isbinaryfile": "^5.0.0",
     "npm-run-all": "^4.1.5",
-    "prettier": "^2.7.1",
-    "rimraf": "^3.0.2",
-    "typescript": "^4.8.4"
+    "prettier": "^3.0.1",
+    "rimraf": "^5.0.1",
+    "typescript": "^5.1.6"
   },
   "dependencies": {
-    "@shd101wyy/mume": "^0.7.3"
+    "@shd101wyy/mume": "^0.7.6"
   },
   "activationEvents": [
     "onCommand:markdown-preview-enhanced.openPreview",
