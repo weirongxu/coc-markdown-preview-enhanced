@@ -15,6 +15,7 @@
     "markdown-preview-enhanced"
   ],
   "engines": {
+    "node": ">=14.14",
     "coc": "^0.0.80"
   },
   "scripts": {
