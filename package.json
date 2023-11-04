@@ -52,7 +52,7 @@
     "typescript": "^5.1.6"
   },
   "dependencies": {
-    "@shd101wyy/mume": "0.7.7",
+    "@shd101wyy/mume": "0.7.9",
     "@types/vfile": "^3.0.2"
   },
   "activationEvents": [
@@ -111,7 +111,7 @@
           "markdownEnumDescriptions": [
             "Use the `markdown-preview-enhanced.previewTheme` setting.",
             "Follow system color scheme. If set to true, then the theme of markdown preview will automatically switch between light and dark when your system switch between light and dark. For example, if you set the current preview theme to `github-light.css`, then when your system is dark, the preview theme will be switched to `github-dark.css` automatically. If set to false, then the theme of markdown preview will not be changed automatically.",
-            "Use the same theme as the editor (light or dark). If set to true, then the theme of markdown preview will automatically switch between light and dark when you switch between vscode light and dark theme. For example, if you set the current preview theme to `github-light.css`, then when you switch to vscode dark theme, the preview theme will be switched to `github-dark.css` automatically. If set to false, then the theme of markdown preview will not be changed automatically."
+            "Use the same theme as the editor (background option, light or dark). If set to true, then the theme of markdown preview will automatically switch between light and dark when you switch between light and dark theme. For example, if you set the current preview theme to `github-light.css`, then when you switch to vscode dark theme, the preview theme will be switched to `github-dark.css` automatically. If set to false, then the theme of markdown preview will not be changed automatically."
           ]
         },
         "markdown-preview-enhanced.enableTypographer": {
@@ -166,6 +166,11 @@
             "https://latex.codecogs.com/svg.latex",
             "https://latex.codecogs.com/png.latex"
           ]
+        },
+        "markdown-preview-enhanced.mathjaxV3ScriptSrc": {
+          "description": "MathJax v3 script source. Leave it empty to use the default CDN.",
+          "default": "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js",
+          "type": "string"
         },
         "markdown-preview-enhanced.enableWikiLinkSyntax": {
           "description": "Enable Wiki Link syntax support. More information can be found at https://help.github.com/articles/adding-links-to-wikis/",
@@ -448,6 +453,16 @@
         "markdown-preview-enhanced.jsdelivrCdnHost": {
           "markdownDescription": "jsDelivr CDN host. Example values: `cdn.jsdelivr.net`, `fastly.jsdelivr.net`, `gcore.jsdelivr.net`, `testingcf.jsdelivr.net`",
           "default": "cdn.jsdelivr.net",
+          "type": "string"
+        },
+        "markdown-preview-enhanced.plantumlJarPath": {
+          "description": "Absolute path to the plantuml.jar file (`java` is required in system path).",
+          "default": "",
+          "type": "string"
+        },
+        "markdown-preview-enhanced.krokiServer": {
+          "description": "The URL of the Kroki server to use.  ",
+          "default": "https://kroki.io",
           "type": "string"
         }
       }

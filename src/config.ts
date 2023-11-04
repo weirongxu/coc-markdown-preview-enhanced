@@ -1,11 +1,11 @@
-import { MarkdownEngineConfig } from '@shd101wyy/mume'
 import {
   CodeBlockTheme,
+  MarkdownEngineConfig,
   MathRenderingOption,
   MermaidTheme,
   PreviewTheme,
   RevealJsTheme,
-} from '@shd101wyy/mume/out/src/markdown-engine-config'
+} from '@shd101wyy/mume'
 import { workspace } from 'coc.nvim'
 
 export enum PreviewColorScheme {
@@ -32,6 +32,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
   public readonly enableCriticMarkupSyntax: boolean
   public readonly frontMatterRenderingOption: string
   public readonly mathRenderingOption: MathRenderingOption
+  public readonly mathjaxV3ScriptSrc: string
   public readonly mathInlineDelimiters: string[][]
   public readonly mathBlockDelimiters: string[][]
   public readonly mathRenderingOnlineService: string
@@ -60,7 +61,9 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
   public readonly usePuppeteerCore: boolean
   public readonly puppeteerArgs: string[]
   public readonly plantumlServer: string
+  public readonly plantumlJarPath: string
   public readonly jsdelivrCdnHost: string
+  public readonly krokiServer: string
 
   // preview config
   public readonly scrollSync: boolean
@@ -101,6 +104,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     this.mathRenderingOnlineService = config.get<string>(
       'mathRenderingOnlineService',
     )!
+    this.mathjaxV3ScriptSrc = config.get<string>('mathjaxV3ScriptSrc')!
     this.codeBlockTheme = config.get<CodeBlockTheme>('codeBlockTheme')!
     this.previewTheme = config.get<PreviewTheme>('previewTheme')!
     this.revealjsTheme = config.get<RevealJsTheme>('revealjsTheme')!
@@ -146,8 +150,10 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     )!
     this.usePuppeteerCore = config.get<boolean>('usePuppeteerCore')!
     this.puppeteerArgs = config.get<string[]>('puppeteerArgs')!
+    this.plantumlJarPath = config.get<string>('plantumlJarPath')!
     this.plantumlServer = config.get<string>('plantumlServer')!
     this.jsdelivrCdnHost = config.get<string>('jsdelivrCdnHost')!
+    this.krokiServer = config.get<string>('krokiServer')!
   }
 
   public isEqualTo(otherConfig: MarkdownPreviewEnhancedConfig) {

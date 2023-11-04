@@ -1,9 +1,7 @@
 import * as mume from '@shd101wyy/mume'
-import { MarkdownEngine } from '@shd101wyy/mume'
-import { useExternalAddFileProtocolFunction } from '@shd101wyy/mume/out/src/utility'
+import { CodeChunkData, MarkdownEngine, PreviewTheme } from '@shd101wyy/mume'
 import type { WebviewOptions, WebviewPanel } from 'coc-webview'
 import {
-  commands,
   Document,
   ExtensionContext,
   Position,
@@ -11,13 +9,13 @@ import {
   TextDocument,
   TextEdit,
   Uri,
+  WorkspaceFolder,
+  commands,
   window,
   workspace,
-  WorkspaceFolder,
 } from 'coc.nvim'
 import path from 'path'
 import { MarkdownPreviewEnhancedConfig, PreviewColorScheme } from './config'
-import { PreviewTheme } from '@shd101wyy/mume/out/src/markdown-engine-config'
 import { getWebviewAPI, logger } from './util'
 
 // http://www.typescriptlang.org/play/
@@ -63,7 +61,7 @@ export class MarkdownPreviewEnhancedView {
       .then(async () => {
         mume.onDidChangeConfigFile(this.refreshAllPreviews.bind(this))
         MarkdownEngine.onModifySource(this.modifySource.bind(this))
-        useExternalAddFileProtocolFunction(
+        mume.utility.useExternalAddFileProtocolFunction(
           (filePath: string, preview: WebviewPanel) => {
             if (preview) {
               return preview.webview
@@ -122,7 +120,7 @@ export class MarkdownPreviewEnhancedView {
    * @param filePath
    */
   private async modifySource(
-    codeChunkData: mume.CodeChunkData,
+    codeChunkData: CodeChunkData,
     result: string,
     filePath: string,
   ): Promise<string> {
@@ -395,7 +393,7 @@ export class MarkdownPreviewEnhancedView {
       // new preview panel
       const localResourceRoots = [
         Uri.file(this.context.extensionPath),
-        Uri.file(mume.utility.extensionDirectoryPath),
+        Uri.file(mume.utility.getExtensionDirectoryPath()),
         Uri.file(mume.getExtensionConfigPath()),
         // Uri.file(tmpdir()),
         Uri.file(
@@ -468,7 +466,7 @@ export class MarkdownPreviewEnhancedView {
         inputString: text,
         config: {
           sourceUri: sourceUri.toString(),
-          initialLine,
+          initialLine: initialLine ?? null,
           vscode: true,
         },
         contentSecurityPolicy: '',
@@ -557,7 +555,7 @@ export class MarkdownPreviewEnhancedView {
         triggeredBySave,
         vscodePreviewPanel: preview,
       })
-      .then(({ html, tocHTML, JSAndCssFiles, yamlConfig }) => {
+      .then(async ({ html, tocHTML, JSAndCssFiles, yamlConfig }) => {
         // check JSAndCssFiles
         if (
           JSON.stringify(JSAndCssFiles) !==
@@ -575,7 +573,15 @@ export class MarkdownPreviewEnhancedView {
             totalLineCount: doc.lineCount,
             sourceUri: sourceUri.toString(),
             id: yamlConfig.id || '',
-            class: yamlConfig.class || '',
+            class: `${(yamlConfig.class as string) || ''} ${
+              this.systemColorScheme === 'dark'
+                ? 'system-dark'
+                : 'system-ligtht'
+            } ${
+              (await this.getEditorColorScheme()) === 'dark'
+                ? 'editor-dark'
+                : 'editor-light'
+            }`,
           })
         }
       })
