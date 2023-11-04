@@ -25,7 +25,8 @@
     "build:pack": "node esbuild.js",
     "check:type": "tsc --noEmit",
     "build": "run-s check:type lint build:pack",
-    "prepare": "run-s build"
+    "prepare": "run-s build",
+    "test": "run-s check:type lint"
   },
   "prettier": {
     "singleQuote": true,
