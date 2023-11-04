@@ -16,7 +16,8 @@ import {
   WorkspaceFolder,
 } from 'coc.nvim'
 import path from 'path'
-import { MarkdownPreviewEnhancedConfig } from './config'
+import { MarkdownPreviewEnhancedConfig, PreviewColorScheme } from './config'
+import { PreviewTheme } from '@shd101wyy/mume/out/src/markdown-engine-config'
 import { getWebviewAPI, logger } from './util'
 
 // http://www.typescriptlang.org/play/
@@ -51,6 +52,8 @@ export class MarkdownPreviewEnhancedView {
   private jsAndCssFilesMaps: { [key: string]: string[] } = {}
 
   private config: MarkdownPreviewEnhancedConfig
+
+  private systemColorScheme: 'light' | 'dark' = 'light'
 
   public constructor(private context: ExtensionContext) {
     this.config = MarkdownPreviewEnhancedConfig.getCurrentConfig()
@@ -322,16 +325,20 @@ export class MarkdownPreviewEnhancedView {
   /**
    * Initialize MarkdownEngine for this markdown file
    */
-  public initMarkdownEngine(sourceUri: Uri): MarkdownEngine {
+  public async initMarkdownEngine(sourceUri: Uri): Promise<MarkdownEngine> {
     let engine = this.getEngine(sourceUri)
     if (!engine) {
+      const previewTheme = await this.getPreviewTheme(
+        this.config.previewTheme,
+        this.config.previewColorScheme,
+      )
       engine = new MarkdownEngine({
         filePath: this.getFilePath(sourceUri),
         projectDirectoryPath: this.getProjectDirectoryPath(
           sourceUri,
           workspace.workspaceFolders,
         ),
-        config: this.config,
+        config: { ...this.config, previewTheme },
       })
       this.engineMaps[sourceUri.fsPath] = engine
       this.jsAndCssFilesMaps[sourceUri.fsPath] = []
@@ -453,7 +460,7 @@ export class MarkdownPreviewEnhancedView {
     const text = doc.getDocumentContent()
     let engine = this.getEngine(sourceUri)
     if (!engine) {
-      engine = this.initMarkdownEngine(sourceUri)
+      engine = await this.initMarkdownEngine(sourceUri)
     }
 
     engine
@@ -769,9 +776,28 @@ export class MarkdownPreviewEnhancedView {
     }
   }
 
-  public updateConfiguration() {
+  private async getEditorColorScheme(): Promise<'light' | 'dark'> {
+    if ((await workspace.nvim.getOption('background')) === 'light') {
+      return 'light'
+    } else {
+      return 'dark'
+    }
+  }
+
+  public async setSystemColorScheme(colorScheme: 'light' | 'dark') {
+    if (this.systemColorScheme !== colorScheme) {
+      this.systemColorScheme = colorScheme
+      if (
+        this.config.previewColorScheme === PreviewColorScheme.systemColorScheme
+      ) {
+        await this.updateConfiguration(true)
+      }
+    }
+  }
+
+  public async updateConfiguration(forceUpdate = false) {
     const newConfig = MarkdownPreviewEnhancedConfig.getCurrentConfig()
-    if (!this.config.isEqualTo(newConfig)) {
+    if (forceUpdate || !this.config.isEqualTo(newConfig)) {
       // if `singlePreview` setting is changed, close all previews.
       if (this.config.singlePreview !== newConfig.singlePreview) {
         this.closeAllPreviews(this.config.singlePreview)
@@ -781,13 +807,61 @@ export class MarkdownPreviewEnhancedView {
         for (const fsPath in this.engineMaps) {
           if (Object.prototype.hasOwnProperty.call(this.engineMaps, fsPath)) {
             const engine = this.engineMaps[fsPath]
-            engine.updateConfiguration(newConfig)
+            const previewTheme = await this.getPreviewTheme(
+              newConfig.previewTheme,
+              newConfig.previewColorScheme,
+            )
+            // Update markdown engine configuration
+            engine.updateConfiguration({ ...newConfig, previewTheme })
           }
         }
 
         // update all generated md documents
         this.refreshAllPreviews()
       }
+    }
+  }
+
+  private getPreviewThemeByLightOrDark(
+    theme: PreviewTheme,
+    color: 'light' | 'dark',
+  ): PreviewTheme {
+    switch (theme) {
+      case 'atom-dark.css':
+      case 'atom-light.css': {
+        return color === 'light' ? 'atom-light.css' : 'atom-dark.css'
+      }
+      case 'github-dark.css':
+      case 'github-light.css': {
+        return color === 'light' ? 'github-light.css' : 'github-dark.css'
+      }
+      case 'one-light.css':
+      case 'one-dark.css': {
+        return color === 'light' ? 'one-light.css' : 'one-dark.css'
+      }
+      case 'solarized-light.css':
+      case 'solarized-dark.css': {
+        return color === 'light' ? 'solarized-light.css' : 'solarized-dark.css'
+      }
+      default: {
+        return theme
+      }
+    }
+  }
+
+  private async getPreviewTheme(
+    theme: PreviewTheme,
+    colorScheme: PreviewColorScheme,
+  ): Promise<PreviewTheme> {
+    if (colorScheme === PreviewColorScheme.editorColorScheme) {
+      return this.getPreviewThemeByLightOrDark(
+        theme,
+        await this.getEditorColorScheme(),
+      )
+    } else if (colorScheme === PreviewColorScheme.systemColorScheme) {
+      return this.getPreviewThemeByLightOrDark(theme, this.systemColorScheme)
+    } else {
+      return theme
     }
   }
 

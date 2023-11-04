@@ -8,6 +8,12 @@ import {
 } from '@shd101wyy/mume/out/src/markdown-engine-config'
 import { workspace } from 'coc.nvim'
 
+export enum PreviewColorScheme {
+  selectedPreviewTheme = 'selectedPreviewTheme',
+  systemColorScheme = 'systemColorScheme',
+  editorColorScheme = 'editorColorScheme',
+}
+
 export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
   public static getCurrentConfig() {
     return new MarkdownPreviewEnhancedConfig()
@@ -54,12 +60,14 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
   public readonly usePuppeteerCore: boolean
   public readonly puppeteerArgs: string[]
   public readonly plantumlServer: string
+  public readonly jsdelivrCdnHost: string
 
   // preview config
   public readonly scrollSync: boolean
   public readonly liveUpdate: boolean
   public readonly singlePreview: boolean
   public readonly automaticallyShowPreviewOfMarkdownBeingEdited: boolean
+  public readonly previewColorScheme: PreviewColorScheme
 
   private constructor() {
     const config = workspace.getConfiguration('markdown-preview-enhanced')
@@ -114,6 +122,8 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     this.automaticallyShowPreviewOfMarkdownBeingEdited = config.get<boolean>(
       'automaticallyShowPreviewOfMarkdownBeingEdited',
     )!
+    this.previewColorScheme =
+      config.get<PreviewColorScheme>('previewColorScheme')!
 
     this.enableHTML5Embed = config.get<boolean>('enableHTML5Embed')!
     this.HTML5EmbedUseImageSyntax = config.get<boolean>(
@@ -137,6 +147,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     this.usePuppeteerCore = config.get<boolean>('usePuppeteerCore')!
     this.puppeteerArgs = config.get<string[]>('puppeteerArgs')!
     this.plantumlServer = config.get<string>('plantumlServer')!
+    this.jsdelivrCdnHost = config.get<string>('jsdelivrCdnHost')!
   }
 
   public isEqualTo(otherConfig: MarkdownPreviewEnhancedConfig) {

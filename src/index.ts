@@ -62,7 +62,7 @@ export function activate(context: ExtensionContext) {
     const config = workspace.getConfiguration('markdown-preview-enhanced')
     const scrollSync = !config.get<boolean>('scrollSync')
     await config.update('scrollSync', scrollSync, true)
-    contentProvider.updateConfiguration()
+    await contentProvider.updateConfiguration()
     if (scrollSync) {
       void window.showInformationMessage('Scroll Sync is enabled')
     } else {
@@ -74,7 +74,7 @@ export function activate(context: ExtensionContext) {
     const config = workspace.getConfiguration('markdown-preview-enhanced')
     const liveUpdate = !config.get<boolean>('liveUpdate')
     await config.update('liveUpdate', liveUpdate, true)
-    contentProvider.updateConfiguration()
+    await contentProvider.updateConfiguration()
     if (liveUpdate) {
       void window.showInformationMessage('Live Update is enabled')
     } else {
@@ -86,7 +86,7 @@ export function activate(context: ExtensionContext) {
     const config = workspace.getConfiguration('markdown-preview-enhanced')
     const breakOnSingleNewLine = !config.get<boolean>('breakOnSingleNewLine')
     await config.update('breakOnSingleNewLine', breakOnSingleNewLine, true)
-    contentProvider.updateConfiguration()
+    await contentProvider.updateConfiguration()
     if (breakOnSingleNewLine) {
       void window.showInformationMessage('Break On Single New Line is enabled')
     } else {
@@ -185,8 +185,16 @@ export function activate(context: ExtensionContext) {
     )
   }
 
-  function webviewFinishLoading(uri: string) {
+  async function webviewFinishLoading(
+    uri: string,
+    {
+      systemColorScheme,
+    }: {
+      systemColorScheme: 'light' | 'dark'
+    },
+  ) {
     const sourceUri = Uri.parse(uri)
+    await contentProvider.setSystemColorScheme(systemColorScheme)
     contentProvider.updateMarkdown(sourceUri)
   }
 
@@ -380,8 +388,8 @@ export function activate(context: ExtensionContext) {
       }),
     ),
     workspace.onDidChangeConfiguration(
-      logger.asyncCatch(() => {
-        contentProvider.updateConfiguration()
+      logger.asyncCatch(async () => {
+        await contentProvider.updateConfiguration()
       }),
     ),
     events.on(

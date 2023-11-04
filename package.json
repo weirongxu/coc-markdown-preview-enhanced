@@ -34,18 +34,16 @@
     "semi": false
   },
   "devDependencies": {
-    "@raidou/eslint-config-base": "^2.0.2",
+    "@raidou/eslint-config-base": "^2.1.0",
     "@types/eslint": "^8.44.1",
     "@types/node": "^20.4.6",
-    "@types/prettier": "^3.0.0",
-    "@types/rimraf": "^4.0.5",
     "@types/uuid": "^9.0.2",
     "coc-helper": "^0.16.3",
     "coc-webview": "^0.12.0",
     "coc.nvim": "^0.0.83-next.9",
-    "esbuild": "^0.18.17",
+    "esbuild": "^0.19.5",
     "esbuild-plugin-alias": "^0.2.1",
-    "eslint": "^8.46.0",
+    "eslint": "^8.53.0",
     "isbinaryfile": "^5.0.0",
     "npm-run-all": "^4.1.5",
     "prettier": "^3.0.1",
@@ -53,7 +51,8 @@
     "typescript": "^5.1.6"
   },
   "dependencies": {
-    "@shd101wyy/mume": "^0.7.6"
+    "@shd101wyy/mume": "0.7.7",
+    "@types/vfile": "^3.0.2"
   },
   "activationEvents": [
     "onCommand:markdown-preview-enhanced.openPreview",
@@ -99,6 +98,20 @@
           "description": "Automatically show preview of markdown being edited.",
           "default": false,
           "type": "boolean"
+        },
+        "markdown-preview-enhanced.previewColorScheme": {
+          "type": "string",
+          "enum": [
+            "selectedPreviewTheme",
+            "systemColorScheme",
+            "editorColorScheme"
+          ],
+          "default": "selectedPreviewTheme",
+          "markdownEnumDescriptions": [
+            "Use the `markdown-preview-enhanced.previewTheme` setting.",
+            "Follow system color scheme. If set to true, then the theme of markdown preview will automatically switch between light and dark when your system switch between light and dark. For example, if you set the current preview theme to `github-light.css`, then when your system is dark, the preview theme will be switched to `github-dark.css` automatically. If set to false, then the theme of markdown preview will not be changed automatically.",
+            "Use the same theme as the editor (light or dark). If set to true, then the theme of markdown preview will automatically switch between light and dark when you switch between vscode light and dark theme. For example, if you set the current preview theme to `github-light.css`, then when you switch to vscode dark theme, the preview theme will be switched to `github-dark.css` automatically. If set to false, then the theme of markdown preview will not be changed automatically."
+          ]
         },
         "markdown-preview-enhanced.enableTypographer": {
           "description": "Enable smartypants and other sweet transforms.",
@@ -259,6 +272,24 @@
             "solarized-dark.css",
             "solarized-light.css",
             "vue.css"
+          ],
+          "markdownEnumDescriptions": [
+            "Atom Dark",
+            "Atom Light",
+            "Atom Material",
+            "GitHub Dark",
+            "GitHub Light",
+            "Gothic",
+            "Medium",
+            "Monokai",
+            "Newsprint",
+            "Night",
+            "None",
+            "One Dark",
+            "One Light",
+            "Solarized Dark",
+            "Solarized Light",
+            "Vue"
           ]
         },
         "markdown-preview-enhanced.revealjsTheme": {
@@ -411,6 +442,11 @@
         "markdown-preview-enhanced.plantumlServer": {
           "description": "Render using PlantUML server instead of binary. Leave it empty to use the builtin plantuml.jar binary (`java` is required in system path). Eg: \"http://localhost:8080/svg/\"",
           "default": "",
+          "type": "string"
+        },
+        "markdown-preview-enhanced.jsdelivrCdnHost": {
+          "markdownDescription": "jsDelivr CDN host. Example values: `cdn.jsdelivr.net`, `fastly.jsdelivr.net`, `gcore.jsdelivr.net`, `testingcf.jsdelivr.net`",
+          "default": "cdn.jsdelivr.net",
           "type": "string"
         }
       }

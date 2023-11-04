@@ -1,4 +1,4 @@
 {
-  "extends": ["@raidou/eslint-config-base"],
-  "env": { "node": true }
+  "env": { "node": true },
+  "extends": ["@raidou/eslint-config-base"]
 }
