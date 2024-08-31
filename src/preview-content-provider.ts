@@ -16,7 +16,7 @@ import {
 } from 'coc.nvim'
 import path from 'path'
 import { MarkdownPreviewEnhancedConfig, PreviewColorScheme } from './config'
-import { getWebviewAPI, logger } from './util'
+import { getDocument, getWebviewAPI, logger } from './util'
 
 // http://www.typescriptlang.org/play/
 // https://github.com/Microsoft/vscode/blob/master/extensions/markdown/media/main.js
@@ -544,7 +544,8 @@ export class MarkdownPreviewEnhancedView {
     }
 
     // not presentation mode
-    const doc = workspace.getDocument(sourceUri.path)
+    const doc = getDocument(sourceUri.path)
+    if (!doc) return
     const text = doc.getDocumentContent()
     this.previewPostMessage(sourceUri, {
       command: 'startParsingMarkdown',

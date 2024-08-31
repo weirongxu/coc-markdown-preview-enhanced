@@ -18,7 +18,7 @@ import {
   isMarkdownFile,
   MarkdownPreviewEnhancedView,
 } from './preview-content-provider'
-import { getWebviewAPI, logger } from './util'
+import { getDocument, getWebviewAPI, logger } from './util'
 
 let editorScrollDelay = Date.now()
 
@@ -203,8 +203,8 @@ export function activate(context: ExtensionContext) {
    * @param imageUrl: url of image to be inserted
    */
   async function insertImageUrl(uri: string, imageUrl: string) {
-    const doc = workspace.getDocument(uri)
-    if (isMarkdownFile(doc.textDocument)) {
+    const doc = getDocument(uri)
+    if (doc && isMarkdownFile(doc.textDocument)) {
       await doc.applyEdits([
         TextEdit.insert(
           await cursorPosition(),
@@ -342,7 +342,8 @@ export function activate(context: ExtensionContext) {
   }
 
   async function clickTaskListCheckbox(uri: string, dataLine: string) {
-    const doc = workspace.getDocument(uri)
+    const doc = getDocument(uri)
+    if (!doc) return
     if (!isMarkdownFile(doc.textDocument)) {
       return
     }
@@ -380,8 +381,8 @@ export function activate(context: ExtensionContext) {
     ),
     workspace.onDidChangeTextDocument(
       logger.asyncCatch((event) => {
-        const doc = workspace.getDocument(event.textDocument.uri)
-        if (isMarkdownFile(doc.textDocument)) {
+        const doc = getDocument(event.textDocument.uri)
+        if (doc && isMarkdownFile(doc.textDocument)) {
           contentProvider.update(Uri.parse(doc.uri))
         }
       }),
@@ -394,8 +395,8 @@ export function activate(context: ExtensionContext) {
     events.on(
       'CursorMoved',
       logger.asyncCatch(async (bufnr) => {
-        const doc = workspace.getDocument(bufnr)
-        if (isMarkdownFile(doc.textDocument)) {
+        const doc = getDocument(bufnr)
+        if (doc && isMarkdownFile(doc.textDocument)) {
           if (Date.now() < editorScrollDelay) {
             return
           }
@@ -552,8 +553,8 @@ export function activate(context: ExtensionContext) {
 }
 
 async function revealLine(uri: string, line: number) {
-  const doc = workspace.getDocument(uri)
-  if (isMarkdownFile(doc.textDocument)) {
+  const doc = getDocument(uri)
+  if (doc && isMarkdownFile(doc.textDocument)) {
     const mode = await workspace.nvim.mode
     if (mode.mode !== 'n') {
       return

@@ -1,6 +1,6 @@
 import { HelperLogger } from 'coc-helper'
 import { WebviewAPI } from 'coc-webview'
-import { Extension, extensions, window } from 'coc.nvim'
+import { Extension, extensions, window, workspace, Document } from 'coc.nvim'
 
 export const logger = new HelperLogger('markdown-preview-enhanced')
 
@@ -18,4 +18,8 @@ export const getWebviewAPI = () => {
     throw new Error(prompt)
   }
   return webviewExt.exports
+}
+
+export function getDocument(uri: number | string) {
+  return workspace.getDocument(uri) as Document | null | undefined
 }
