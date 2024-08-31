@@ -62,7 +62,7 @@ export class MarkdownPreviewEnhancedView {
         mume.onDidChangeConfigFile(this.refreshAllPreviews.bind(this))
         MarkdownEngine.onModifySource(this.modifySource.bind(this))
         mume.utility.useExternalAddFileProtocolFunction(
-          (filePath: string, preview: WebviewPanel) => {
+          (filePath: string, preview: WebviewPanel | null) => {
             if (preview) {
               return preview.webview
                 .asWebviewUri(Uri.file(filePath))
@@ -216,7 +216,7 @@ export class MarkdownPreviewEnhancedView {
    * return markdown engine of sourceUri
    * @param sourceUri
    */
-  public getEngine(sourceUri: Uri): MarkdownEngine {
+  public getEngine(sourceUri: Uri): MarkdownEngine | undefined {
     return this.engineMaps[sourceUri.fsPath]
   }
 
@@ -229,7 +229,7 @@ export class MarkdownPreviewEnhancedView {
       // assert(this.singlePreviewPanel, 'singlePreviewPanel must be initialized');
       return this.singlePreviewPanel
     } else {
-      return this.previewMaps[sourceUri.fsPath]
+      return this.previewMaps[sourceUri.fsPath] ?? null
     }
   }
 
@@ -308,7 +308,7 @@ export class MarkdownPreviewEnhancedView {
       const workspaceFolder = possibleWorkspaceFolders.sort(
         (x, y) => y.length - x.length,
       )[0]
-      projectDirectoryPath = workspaceFolder
+      projectDirectoryPath = workspaceFolder ?? ''
     } else {
       projectDirectoryPath = ''
     }
@@ -353,7 +353,7 @@ export class MarkdownPreviewEnhancedView {
 
   public async initPreview(sourceUri: Uri, doc: Document, openURL: boolean) {
     const isUsingSinglePreview = useSinglePreview()
-    let previewPanel: WebviewPanel
+    let previewPanel: WebviewPanel | undefined
     if (isUsingSinglePreview && this.singlePreviewPanel) {
       if (!this.singlePreviewPanelSourceUriTarget) {
         return
@@ -367,7 +367,8 @@ export class MarkdownPreviewEnhancedView {
         this.getProjectDirectoryPath(sourceUri, workspace.workspaceFolders) ||
         path.dirname(sourceUri.fsPath)
       logger.info(sourceUri.path)
-      logger.info(workspace.workspaceFolders[0].uri)
+      const folderUri = workspace.workspaceFolders[0]?.uri
+      if (folderUri) logger.info(folderUri)
       logger.info(oldResourceRoot)
       logger.info(newResourceRoot)
       if (oldResourceRoot !== newResourceRoot) {
@@ -384,7 +385,7 @@ export class MarkdownPreviewEnhancedView {
       }
     } else if (this.previewMaps[sourceUri.fsPath]) {
       previewPanel = this.previewMaps[sourceUri.fsPath]
-      if (openURL) {
+      if (openURL && previewPanel) {
         previewPanel.reveal({
           openURL,
         })
@@ -441,6 +442,10 @@ export class MarkdownPreviewEnhancedView {
       }
     }
 
+    if (!previewPanel) {
+      return
+    }
+
     // register previewPanel
     this.previewMaps[sourceUri.fsPath] = previewPanel
     this.preview2EditorMap.set(previewPanel, doc)
@@ -450,7 +455,7 @@ export class MarkdownPreviewEnhancedView {
 
     // init markdown engine
     let initialLine: number | undefined
-    if (doc && doc.uri === sourceUri.fsPath) {
+    if (doc.uri === sourceUri.fsPath) {
       const cursor = await (await workspace.nvim.window).cursor
       initialLine = cursor[0] ? cursor[0] - 1 : 0
     }
@@ -589,10 +594,8 @@ export class MarkdownPreviewEnhancedView {
   }
 
   public refreshPreviewPanel(sourceUri: Uri) {
-    this.preview2EditorMap.forEach((doc, previewPanel) => {
+    this.preview2EditorMap.forEach((doc) => {
       if (
-        previewPanel &&
-        doc &&
         isMarkdownFile(doc.textDocument) &&
         doc.uri &&
         doc.uri === sourceUri.fsPath
@@ -818,7 +821,7 @@ export class MarkdownPreviewEnhancedView {
               newConfig.previewColorScheme,
             )
             // Update markdown engine configuration
-            engine.updateConfiguration({ ...newConfig, previewTheme })
+            engine?.updateConfiguration({ ...newConfig, previewTheme })
           }
         }
 
@@ -885,7 +888,7 @@ export class MarkdownPreviewEnhancedView {
 }
 
 /**
- * check whehter to use only one preview or not
+ * check whether to use only one preview or not
  */
 export function useSinglePreview() {
   const config = workspace.getConfiguration('markdown-preview-enhanced')

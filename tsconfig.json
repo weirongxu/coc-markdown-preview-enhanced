@@ -10,7 +10,8 @@
     "moduleResolution": "node",
     "noImplicitAny": false,
     "skipLibCheck": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "noUncheckedIndexedAccess": true
   },
   "include": ["src", "client", "."]
 }

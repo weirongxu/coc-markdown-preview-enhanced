@@ -20,7 +20,7 @@ async function start() {
         name: 'my-watch-plugin',
         setup(build) {
           build.onEnd(() => {
-            console.log('builded', new Date().toLocaleString())
+            console.log('built', new Date().toLocaleString())
           })
         },
       },

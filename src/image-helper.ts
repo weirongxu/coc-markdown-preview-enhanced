@@ -13,7 +13,7 @@ import * as path from 'path'
 import { logger } from './util'
 
 /**
- * Copy ans paste image at imageFilePath to config.imageForlderPath.
+ * Copy ans paste image at imageFilePath to config.imageFolderPath.
  * Then insert markdown image url to markdown file.
  * @param uri
  * @param imageFilePath

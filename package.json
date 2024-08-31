@@ -55,6 +55,9 @@
     "@shd101wyy/mume": "0.7.9",
     "@types/vfile": "^3.0.2"
   },
+  "overrides": {
+    "cheerio": "1.0.0-rc.12"
+  },
   "activationEvents": [
     "onCommand:markdown-preview-enhanced.openPreview",
     "onCommand:markdown-preview-enhanced.openPreviewBackground",

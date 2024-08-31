@@ -1,5 +1,4 @@
 import { getExtensionConfigPath, utility } from '@shd101wyy/mume'
-import { isBinaryFile } from 'isbinaryfile'
 import {
   commands,
   events,
@@ -12,10 +11,10 @@ import {
   window,
   workspace,
 } from 'coc.nvim'
+import { isBinaryFile } from 'isbinaryfile'
 import path from 'path'
 import { pasteImageFile, uploadImageFile } from './image-helper'
 import {
-  getPreviewUri,
   isMarkdownFile,
   MarkdownPreviewEnhancedView,
 } from './preview-content-provider'
@@ -205,7 +204,7 @@ export function activate(context: ExtensionContext) {
    */
   async function insertImageUrl(uri: string, imageUrl: string) {
     const doc = workspace.getDocument(uri)
-    if (doc && isMarkdownFile(doc.textDocument)) {
+    if (isMarkdownFile(doc.textDocument)) {
       await doc.applyEdits([
         TextEdit.insert(
           await cursorPosition(),
@@ -284,10 +283,10 @@ export function activate(context: ExtensionContext) {
     }
 
     const sourceUri = Uri.parse(doc.uri)
-    const previewUri = getPreviewUri(sourceUri)
-    if (!previewUri) {
-      return
-    }
+    //const previewUri = getPreviewUri(sourceUri)
+    //if (!previewUri) {
+    //  return
+    //}
 
     contentProvider.previewPostMessage(sourceUri, {
       command: 'runAllCodeChunks',
@@ -301,10 +300,10 @@ export function activate(context: ExtensionContext) {
     }
 
     const sourceUri = Uri.parse(doc.uri)
-    const previewUri = getPreviewUri(sourceUri)
-    if (!previewUri) {
-      return
-    }
+    //const previewUri = getPreviewUri(sourceUri)
+    //if (!previewUri) {
+    //  return
+    //}
     contentProvider.previewPostMessage(sourceUri, {
       command: 'runCodeChunk',
     })
@@ -344,7 +343,7 @@ export function activate(context: ExtensionContext) {
 
   async function clickTaskListCheckbox(uri: string, dataLine: string) {
     const doc = workspace.getDocument(uri)
-    if (!doc || !isMarkdownFile(doc.textDocument)) {
+    if (!isMarkdownFile(doc.textDocument)) {
       return
     }
 
@@ -382,7 +381,7 @@ export function activate(context: ExtensionContext) {
     workspace.onDidChangeTextDocument(
       logger.asyncCatch((event) => {
         const doc = workspace.getDocument(event.textDocument.uri)
-        if (doc && isMarkdownFile(doc.textDocument)) {
+        if (isMarkdownFile(doc.textDocument)) {
           contentProvider.update(Uri.parse(doc.uri))
         }
       }),
@@ -396,7 +395,7 @@ export function activate(context: ExtensionContext) {
       'CursorMoved',
       logger.asyncCatch(async (bufnr) => {
         const doc = workspace.getDocument(bufnr)
-        if (doc && isMarkdownFile(doc.textDocument)) {
+        if (isMarkdownFile(doc.textDocument)) {
           if (Date.now() < editorScrollDelay) {
             return
           }
@@ -554,7 +553,7 @@ export function activate(context: ExtensionContext) {
 
 async function revealLine(uri: string, line: number) {
   const doc = workspace.getDocument(uri)
-  if (doc && isMarkdownFile(doc.textDocument)) {
+  if (isMarkdownFile(doc.textDocument)) {
     const mode = await workspace.nvim.mode
     if (mode.mode !== 'n') {
       return
