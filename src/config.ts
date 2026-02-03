@@ -16,7 +16,7 @@ function expandPath(filePath: string): string {
   if (!filePath) return filePath
   const homeDir = os.homedir()
   // Expand ~ to home directory
-  if (filePath.startsWith('~/')) return filePath.replace('~/', homeDir + '/')
+  if (filePath.startsWith('~/')) return filePath.replace('~/', `${homeDir}/`)
   if (filePath === '~') return homeDir
   // Expand $HOME to home directory
   return filePath.replace(/\$HOME/g, homeDir)
