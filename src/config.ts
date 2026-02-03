@@ -6,7 +6,21 @@ import {
   PreviewTheme,
   RevealJsTheme,
 } from '@shd101wyy/mume'
+import * as os from 'os'
 import { workspace } from 'coc.nvim'
+
+/**
+ * Expands ~ and $HOME in file paths
+ */
+function expandPath(filePath: string): string {
+  if (!filePath) return filePath
+  const homeDir = os.homedir()
+  // Expand ~ to home directory
+  if (filePath.startsWith('~/')) return filePath.replace('~/', homeDir + '/')
+  if (filePath === '~') return homeDir
+  // Expand $HOME to home directory
+  return filePath.replace(/\$HOME/g, homeDir)
+}
 
 export enum PreviewColorScheme {
   selectedPreviewTheme = 'selectedPreviewTheme',
@@ -75,7 +89,9 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
   private constructor() {
     const config = workspace.getConfiguration('markdown-preview-enhanced')
 
-    this.configPath = (config.get<string>('configPath') || '').trim()
+    this.configPath = expandPath(
+      (config.get<string>('configPath') || '').trim(),
+    )
     this.usePandocParser = config.get<boolean>('usePandocParser')!
     this.breakOnSingleNewLine = config.get<boolean>('breakOnSingleNewLine')!
     this.enableTypographer = config.get<boolean>('enableTypographer')!
@@ -112,9 +128,9 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     this.imageFolderPath = config.get<string>('imageFolderPath')!
     this.imageUploader = config.get<string>('imageUploader')!
     this.printBackground = config.get<boolean>('printBackground')!
-    this.chromePath = config.get<string>('chromePath')!
-    this.imageMagickPath = config.get<string>('imageMagickPath')!
-    this.pandocPath = config.get<string>('pandocPath')!
+    this.chromePath = expandPath(config.get<string>('chromePath')!)
+    this.imageMagickPath = expandPath(config.get<string>('imageMagickPath')!)
+    this.pandocPath = expandPath(config.get<string>('pandocPath')!)
     this.pandocMarkdownFlavor = config.get<string>('pandocMarkdownFlavor')!
     this.pandocArguments = config.get<string[]>('pandocArguments')!
     this.latexEngine = config.get<string>('latexEngine')!
@@ -150,7 +166,7 @@ export class MarkdownPreviewEnhancedConfig implements MarkdownEngineConfig {
     )!
     this.usePuppeteerCore = config.get<boolean>('usePuppeteerCore')!
     this.puppeteerArgs = config.get<string[]>('puppeteerArgs')!
-    this.plantumlJarPath = config.get<string>('plantumlJarPath')!
+    this.plantumlJarPath = expandPath(config.get<string>('plantumlJarPath')!)
     this.plantumlServer = config.get<string>('plantumlServer')!
     this.jsdelivrCdnHost = config.get<string>('jsdelivrCdnHost')!
     this.krokiServer = config.get<string>('krokiServer')!
