@@ -407,7 +407,7 @@ export class MarkdownPreviewEnhancedView {
         `Preview ${path.basename(sourceUri.fsPath)}`,
         {
           openURL,
-          routeName: 'markdown-preview-enhanced',
+          routeName: `markdown-preview-enhanced-${encodeURIComponent(sourceUri.fsPath)}`,
         },
         this.getWebviewOptions(localResourceRoots),
       )
